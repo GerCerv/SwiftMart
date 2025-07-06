@@ -1,0 +1,39 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Navbar Styling */
+nav {
+    background-color: #333;
+    padding: 10px 20px;
+}
+
+/* Navbar List Styling */
+.navbar {
+    list-style-type: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Navbar List Items Styling */
+.navbar li {
+    margin: 0 15px;
+}
+
+/* Navbar Links Styling */
+.navbar a {
+    text-decoration: none;
+    color: white;
+    font-size: 18px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+/* Hover Effect */
+.navbar a:hover {
+    background-color: #555;
+}

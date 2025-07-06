@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Dashboard - SwiftMart</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <style>
+        :root {
+            --primary: #28a745;
+            --secondary: #6c757d;
+            --light: #f8f9fa;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            overflow-x: hidden;
+        }
+
+        .sidebar {
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            height: 100vh;
+            width: 280px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        .sidebar .nav-link {
+            color: #495057;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            font-size: 1rem;
+            padding: 10px 15px;
+        }
+
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: var(--primary);
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 10px;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            padding: 1.5rem;
+            transition: margin-left 0.3s ease;
+        }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .vendor-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .product-img {
+            height: 80px;
+            width: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-approved {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .badge-featured {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .product-card {
+            display: none;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            background: white;
+        }
+
+        .product-card .product-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-card .product-details p {
+            margin: 0.25rem 0;
+            font-size: 0.9rem;
+        }
+
+        .product-card .product-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        @media (max-width: 767.98px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 250px;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .navbar-toggler {
+                display: block;
+            }
+
+            .card {
+                margin-bottom: 1rem;
+            }
+
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .table {
+                font-size: 0.9rem;
+            }
+
+            .table th, .table td {
+                padding: 0.5rem;
+            }
+
+            .modal-dialog {
+                margin: 0;
+                width: 100%;
+                max-width: none;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .modal-content {
+                flex-grow: 1;
+                border-radius: 0;
+            }
+
+            .chart-container {
+                height: 200px !important;
+            }
+
+            .btn-sm {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.8rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            h5 {
+                font-size: 1.1rem;
+            }
+
+            .pagination {
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .sidebar {
+                width: 80%;
+                max-width: 220px;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .card-body {
+                padding: 1rem;
+            }
+
+            #products-table {
+                display: none;
+            }
+
+            .product-card {
+                display: block;
+            }
+
+            .form-control,
+            .form-select {
+                font-size: 0.9rem;
+            }
+
+            .modal-body {
+                padding: 1rem;
+            }
+
+            .modal-footer {
+                padding: 0.75rem;
+            }
+
+            .toast-container {
+                padding: 0.5rem;
+            }
+
+            .toast {
+                width: 100%;
+                max-width: 300px;
+                font-size: 0.9rem;
+            }
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .overlay.show {
+            display: block;
+        }
+
+        .pagination-loading,
+        .tab-loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body>
+  
+@if (session('success'))
+    <div aria-live="polite" aria-atomic="true" class="position-fixed top-0 end-0 p-3" style="z-index: 1055;">
+        <div class="toast align-items-center text-white bg-success border-0 show" id="autoDismissToast" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    {{ session('success') }}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+    <script>
+        setTimeout(() => {
+            const toastEl = document.getElementById('autoDismissToast');
+            if (toastEl) {
+                const toast = bootstrap.Toast.getOrCreateInstance(toastEl);
+                toast.hide();
+            }
+        }, 5000);
+    </script>
+@endif
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header bg-success text-white">
+            <strong class="me-auto">Notification</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body"></div>
+    </div>
+</div>
+
+<div class="overlay" id="sidebarOverlay"></div>
+
+<div class="d-flex flex-column">
+    <nav class="navbar navbar-light bg-white shadow-sm d-md-none">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" id="sidebarToggle">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-shop me-1 text-success"></i> SwiftMart
+            </a>
+        </div>
+    </nav>
+
+    <div class="sidebar d-flex flex-column flex-shrink-0 p-3" id="sidebar">
+        <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-decoration-none">
+            <i class="bi bi-shop me-2 text-success" style="font-size: 1.5rem;"></i>
+            <span class="fs-4 fw-bold">SwiftMart Vendors</span>
+        </a>
+
+        <div class="dropdown my-3">
+            <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+                <img src="{{ asset('images/hina.jpg') }}" alt="Vendor" class="vendor-avatar me-2">
+                @auth('vendor')
+                    <strong>{{ Auth::guard('vendor')->user()->name }}</strong>
+                @else
+                    <strong>Green Farms</strong>
+                @endauth
+            </a>
+            <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
+                <li><a class="dropdown-item" href="#">Profile</a></li>
+                <li><a class="dropdown-item" href="#">Settings</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <form action="{{ route('vendor.logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="dropdown-item">Sign out</button>
+                </form>
+            </ul>
+        </div>
+
+        <hr>
+
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item">
+                <a href="/vendor/dashboard/dashboard" class="nav-link tab-link {{ request()->is('vendor/dashboard/dashboard') ? 'active' : '' }}" data-tab="dashboard">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="/vendor/dashboard/products" class="nav-link tab-link {{ request()->is('vendor/dashboard/products') ? 'active' : '' }}" data-tab="products">
+                    <i class="bi bi-basket"></i> My Products
+                </a>
+            </li>
+            <li>
+                <a href="/vendor/dashboard/orders" class="nav-link tab-link {{ request()->is('vendor/dashboard/orders') ? 'active' : '' }}" data-tab="orders">
+                    <i class="bi bi-cart3"></i> Orders
+                </a>
+            </li>
+            <li>
+                <a href="/vendor/dashboard/reports" class="nav-link tab-link {{ request()->is('vendor/dashboard/reports') ? 'active' : '' }}" data-tab="reports">
+                    <i class="bi bi-graph-up"></i> Sales Reports
+                </a>
+            </li>
+            <li>
+                <a href="/vendor/dashboard/settings" class="nav-link tab-link {{ request()->is('vendor/dashboard/settings') ? 'active' : '' }}" data-tab="settings">
+                    <i class="bi bi-gear"></i> Stall Settings
+                </a>
+            </li>
+        </ul>
+
+        <hr>
+    </div>
+
+    <div class="main-content flex-grow-1">
+        <div class="tab-content">
+            <div class="tab-pane fade {{ request()->is('vendor/dashboard/dashboard') ? 'show active' : '' }}" id="dashboard">
+                <div class="tab-loading-spinner">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <div class="dashboard-content">
+                    @include('vendor.dashboard')
+                </div>
+            </div>
+            <div class="tab-pane fade {{ request()->is('vendor/dashboard/products') ? 'show active' : '' }}" id="products">
+                <div class="tab-loading-spinner">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <div class="products-content">
+                    @include('vendor.products')
+                </div>
+            </div>
+            <div class="tab-pane fade {{ request()->is('vendor/dashboard/orders') ? 'show active' : '' }}" id="orders">
+                <div class="tab-loading-spinner">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <div class="orders-content">
+                    @include('vendor.orders')
+                </div>
+            </div>
+            <div class="tab-pane fade {{ request()->is('vendor/dashboard/reports') ? 'show active' : '' }}" id="reports">
+                <div class="tab-loading-spinner">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <div class="reports-content">
+                    @include('vendor.reports')
+                </div>
+            </div>
+            <div class="tab-pane fade {{ request()->is('vendor/dashboard/settings') ? 'show active' : '' }}" id="settings">
+                <div class="tab-loading-spinner">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <div class="settings-content">
+                    @include('vendor.settings')
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const overlay = document.getElementById('sidebarOverlay');
+
+    function toggleSidebar() {
+        sidebar.classList.toggle('show');
+        overlay.classList.toggle('show');
+    }
+
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', toggleSidebar);
+    }
+
+    if (overlay) {
+        overlay.addEventListener('click', toggleSidebar);
+    }
+
+    $('.tab-link').on('click', function(e) {
+        e.preventDefault();
+        const tabId = $(this).data('tab');
+        const $tabPane = $(`#${tabId}`);
+        const $tabLink = $(this);
+        const newUrl = `/vendor/dashboard/${tabId}`;
+
+        $('.tab-pane').removeClass('show active');
+        $('.nav-link').removeClass('active');
+
+        $tabPane.addClass('show active');
+        $tabLink.addClass('active');
+
+        $tabPane.find('.tab-loading-spinner').show();
+        $tabPane.find(`.${tabId}-content`).hide();
+
+        $.ajax({
+            url: `/vendor/dashboard/tab/${tabId}`,
+            type: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(response) {
+                $tabPane.find(`.${tabId}-content`).html(response);
+                $tabPane.find('.tab-loading-spinner').hide();
+                $tabPane.find(`.${tabId}-content`).show();
+
+                // Update the URL without reloading
+                window.history.pushState({ tab: tabId }, '', newUrl);
+
+                initializeTabHandlers(tabId);
+                reinitializeBootstrapComponents(tabId);
+            },
+            error: function(xhr) {
+                $tabPane.find('.tab-loading-spinner').hide();
+                $tabPane.find(`.${tabId}-content`).show();
+                showToast(`Error loading ${tabId} content`, 'error');
+            }
+        });
+
+        if (window.innerWidth <= 767.98) {
+            toggleSidebar();
+        }
+    });
+
+    // Handle browser back/forward navigation
+    window.addEventListener('popstate', function(event) {
+        const tabId = event.state ? event.state.tab : 'dashboard';
+        const $tabPane = $(`#${tabId}`);
+        const $tabLink = $(`.tab-link[data-tab="${tabId}"]`);
+
+        $('.tab-pane').removeClass('show active');
+        $('.nav-link').removeClass('active');
+
+        $tabPane.addClass('show active');
+        $tabLink.addClass('active');
+
+        $tabPane.find('.tab-loading-spinner').show();
+        $tabPane.find(`.${tabId}-content`).hide();
+
+        $.ajax({
+            url: `/vendor/dashboard/tab/${tabId}`,
+            type: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(response) {
+                $tabPane.find(`.${tabId}-content`).html(response);
+                $tabPane.find('.tab-loading-spinner').hide();
+                $tabPane.find(`.${tabId}-content`).show();
+
+                initializeTabHandlers(tabId);
+                reinitializeBootstrapComponents(tabId);
+            },
+            error: function(xhr) {
+                $tabPane.find('.tab-loading-spinner').hide();
+                $tabPane.find(`.${tabId}-content`).show();
+                showToast(`Error loading ${tabId} content`, 'error');
+            }
+        });
+    });
+
+    $(document).off('click', '#pagination-links a').on('click', '#pagination-links a', function(e) {
+        e.preventDefault();
+        const url = $(this).attr('href');
+        if (!url || url === '#') {
+            console.log('Invalid pagination URL:', url);
+            return;
+        }
+
+        $('#products-table-body, #products-cards-body').html(`
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        `);
+        $('#pagination-links').hide();
+        $('.pagination-loading').show();
+
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                const $response = $(response);
+                const tableBody = $response.find('#products-table-body').html();
+                const cardsBody = $response.find('#products-cards-body').html();
+                const paginationLinks = $response.find('#pagination-links').html();
+
+                if (!tableBody || !cardsBody || !paginationLinks) {
+                    showToast('Error: Incomplete response from server', 'error');
+                    return;
+                }
+
+                $('#products-table-body').html(tableBody);
+                $('#products-cards-body').html(cardsBody);
+                $('#pagination-links').html(paginationLinks);
+
+                $('.pagination-loading').hide();
+                $('#pagination-links').show();
+
+                initializeProductHandlers();
+
+                $('html, body').animate({
+                    scrollTop: $('#products').offset().top
+                }, 300);
+            },
+            error: function(xhr) {
+                let errorMessage = 'Error loading products. Please try again.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                showToast(errorMessage, 'error');
+                $('.pagination-loading').hide();
+                $('#pagination-links').show();
+            }
+        });
+    });
+
+    $(document).on('click', '.edit-product-btn', function(e) {
+        e.preventDefault();
+        const productId = $(this).data('id');
+        $(`#editModal${productId}`).modal('show');
+    });
+
+    $(document).on('submit', '.edit-product-form', function(e) {
+        e.preventDefault();
+        const form = this;
+        const productId = $(this).data('id');
+        const formData = new FormData(form);
+
+        $.ajax({
+            url: form.action,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                'X-HTTP-Method-Override': 'PUT'
+            },
+            success: function(response) {
+                $(`#editModal${productId}`).modal('hide');
+                showToast('Product updated successfully!');
+                reloadProductsTable();
+            },
+            error: function(xhr) {
+                let errorMessage = 'Error updating product';
+                if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    errorMessage = Object.values(xhr.responseJSON.errors).join('<br>');
+                }
+                showToast(errorMessage, 'error');
+            }
+        });
+    });
+
+    $('#addProductModal form').on('submit', function(e) {
+        e.preventDefault();
+        const form = this;
+        const formData = new FormData(form);
+        
+        $.ajax({
+            url: form.action,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                $('#addProductModal').modal('hide');
+                form.reset();
+                showToast('Product added successfully!');
+                reloadProductsTable();
+            },
+            error: function(xhr) {
+                let errorMessage = 'Error adding product';
+                if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    errorMessage = Object.values(xhr.responseJSON.errors).join('<br>');
+                }
+                showToast(errorMessage, 'error');
+            }
+        });
+    });
+
+    function reloadProductsTable() {
+        const currentPage = $('#pagination-links .page-item.active a').attr('href') || '/vendor/dashboard/tab/products';
+        $('#products-table-body, #products-cards-body').html(`
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        `);
+        $('#pagination-links').hide();
+        $('.pagination-loading').show();
+
+        $.ajax({
+            url: currentPage,
+            type: 'GET',
+            success: function(response) {
+                const $response = $(response);
+                const tableBody = $response.find('#products-table-body').html();
+                const cardsBody = $response.find('#products-cards-body').html();
+                const paginationLinks = $response.find('#pagination-links').html();
+
+                if (!tableBody || !cardsBody || !paginationLinks) {
+                    showToast('Error: Incomplete response from server', 'error');
+                    return;
+                }
+
+                $('#products-table-body').html(tableBody);
+                $('#products-cards-body').html(cardsBody);
+                $('#pagination-links').html(paginationLinks);
+
+                $('.pagination-loading').hide();
+                $('#pagination-links').show();
+
+                initializeProductHandlers();
+            },
+            error: function(xhr) {
+                showToast('Error reloading products', 'error');
+                $('.pagination-loading').hide();
+                $('#pagination-links').show();
+            }
+        });
+    }
+
+    function showToast(message, type = 'success') {
+        const toastEl = document.getElementById('liveToast');
+        if (!toastEl) return;
+        
+        const toastBody = toastEl.querySelector('.toast-body');
+        toastBody.textContent = message;
+        
+        const toastHeader = toastEl.querySelector('.toast-header');
+        toastHeader.className = 'toast-header';
+        toastHeader.classList.add(type === 'success' ? 'bg-success' : 'bg-danger');
+        toastHeader.classList.add('text-white');
+        
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+    }
+
+    function initializeProductHandlers() {
+        $('.status-form .form-select-sm').off('change').on('change', function(e) {
+            e.preventDefault();
+            const form = $(this).closest('form');
+
+            $.ajax({
+                url: form.attr('action'),
+                type: 'POST',
+                data: form.serialize(),
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'X-HTTP-Method-Override': 'PATCH'
+                },
+                success: function() {
+                    showToast('Status updated successfully');
+                    reloadProductsTable();
+                },
+                error: function() {
+                    showToast('Error updating status', 'error');
+                }
+            });
+        });
+
+        $('.btn-outline-danger').off('click').on('click', function(e) {
+            e.preventDefault();
+            if (confirm('Are you sure?')) {
+                const form = $(this).closest('form');
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: form.serialize(),
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'X-HTTP-Method-Override': 'DELETE'
+                    },
+                    success: function() {
+                        showToast('Product deleted successfully');
+                        reloadProductsTable();
+                    },
+                    error: function() {
+                        showToast('Error deleting product', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function initializeTabHandlers(tabId) {
+        if (tabId === 'products') {
+            initializeProductHandlers();
+        }
+    }
+
+    // function reinitializeBootstrapComponents(tabId) {
+    //     $(`#${tabId} .edit-product-btn, #${tabId} [data-bs-toggle="modal"]`).off('click').on('click', function() {
+    //         const target = $(this).data('bs-target');
+    //         if (target) {
+    //             $(target).modal('show');
+    //         }
+    //     });
+
+    //     $(`#${tabId} .dropdown-toggle`).each(function() {
+    //         new bootstrap.Dropdown(this);
+    //     });
+
+    //     if (tabId === 'reports') {
+    //         try {
+    //             const salesChartCanvas = document.getElementById('salesChart');
+    //             if (salesChartCanvas && !salesChartCanvas.chart) {
+    //                 salesChartCanvas.chart = new Chart(salesChartCanvas, {
+    //                     type: 'line',
+    //                     data: {
+    //                         labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+    //                         datasets: [{
+    //                             label: 'Sales',
+    //                             data: [100, 200, 150, 300, 250],
+    //                             borderColor: '#28a745',
+    //                             fill: false
+    //                         }]
+    //                     },
+    //                     options: {
+    //                         responsive: true,
+    //                         maintainAspectRatio: false,
+    //                         scales: {
+    //                             y: {
+    //                                 beginAtZero: true
+    //                             }
+    //                         }
+    //                     }
+    //                 });
+    //             }
+
+    //             const categoryChartCanvas = document.getElementById('categoryChart');
+    //             if (categoryChartCanvas && !categoryChartCanvas.chart) {
+    //                 categoryChartCanvas.chart = new Chart(categoryChartCanvas, {
+    //                     type: 'pie',
+    //                     data: {
+    //                         labels: ['Vegetables', 'Fruits', 'Meat', 'Fish'],
+    //                         datasets: [{
+    //                             data: [40, 30, 20, 10],
+    //                             backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#17a2b8']
+    //                         }]
+    //                     },
+    //                     options: {
+    //                         responsive: true,
+    //                         maintainAspectRatio: false
+    //                     }
+    //                 });
+    //             }
+    //         } catch (error) {
+    //             console.error('Error reinitializing charts:', error);
+    //         }
+    //     }
+    // }
+    
+    function reinitializeBootstrapComponents(tabId) {
+        $(`#${tabId} .edit-product-btn, #${tabId} [data-bs-toggle="modal"]`).off('click').on('click', function() {
+            const target = $(this).data('bs-target');
+            if (target) {
+                $(target).modal('show');
+            }
+        });
+
+        $(`#${tabId} .dropdown-toggle`).each(function() {
+            new bootstrap.Dropdown(this);
+        });
+
+        if (tabId === 'reports') {
+            try {
+                const salesChartCanvas = document.getElementById('salesChart');
+                if (!salesChartCanvas) {
+                    console.warn('Sales chart canvas not found. No sales data available or canvas not rendered.');
+                    return;
+                }
+
+                // Destroy existing chart if it exists to prevent duplication
+                if (salesChartCanvas.chart) {
+                    salesChartCanvas.chart.destroy();
+                    console.log('Previous chart destroyed');
+                }
+
+                // Check for salesData
+                const salesData = window.salesData || {};
+                console.log('Sales Data in Chart Init:', salesData); // Debug: Log data
+
+                if (Object.keys(salesData).length === 0) {
+                    console.warn('No sales data available for the chart');
+                    return;
+                }
+
+                const labels = Object.keys(salesData).sort(); // Sort dates for chronological order
+                const data = labels.map(date => salesData[date]);
+
+                console.log('Chart Labels:', labels); // Debug: Log chart labels
+                console.log('Chart Data:', data); // Debug: Log chart data
+
+                if (labels.length === 0 || data.length === 0) {
+                    console.warn('Chart data is empty after processing');
+                    return;
+                }
+
+                salesChartCanvas.chart = new Chart(salesChartCanvas, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Sales (₱)',
+                            data: data,
+                            borderColor: '#28a745',
+                            fill: false,
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Sales Amount (₱)'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Date'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        }
+                    }
+                });
+                console.log('Chart initialized successfully');
+            } catch (error) {
+                console.error('Error initializing sales chart:', error);
+            }
+        }
+    }
+
+    // Initialize based on current URL
+    const currentPath = window.location.pathname.split('/').pop() || 'dashboard';
+    if ($(`.tab-link[data-tab="${currentPath}"]`).length) {
+        $(`.tab-link[data-tab="${currentPath}"]`).trigger('click');
+    } else {
+        $('.tab-link[data-tab="dashboard"]').trigger('click');
+    }
+
+    initializeProductHandlers();
+    reinitializeBootstrapComponents(currentPath);
+});
+</script>
+</body>
+</html>

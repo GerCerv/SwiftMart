@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Delivery Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1;
+            border-radius: 0.5rem;
+            width: 150px;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        button:disabled,
+        .btn.disabled {
+            cursor: not-allowed !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-6">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold">Delivery Dashboard</h1>
+            
+            <!-- Profile Dropdown -->
+            <div class="dropdown relative">
+                <button class="flex items-center space-x-2">
+                    <img src="{{ $deliveryMan->profile_image ? asset('storage/'.$deliveryMan->profile_image) : asset('images/default-profile.jpg') }}" 
+                         alt="{{ $deliveryMan->name }}" 
+                         class="w-10 h-10 rounded-full object-cover">
+                    <span>{{ $deliveryMan->name }}</span>
+                </button>
+                
+                <div class="dropdown-content mt-2 py-2">
+                    <div class="px-4 py-2 hover:bg-gray-100">
+                        <label class="flex items-center cursor-pointer">
+                            <span class="mr-2"><i class="fas fa-power-off"></i></span>
+                            <input type="checkbox" class="toggle" {{ $deliveryMan->is_active ? 'checked' : '' }}>
+                            <span class="ml-2">Active</span>
+                        </label>
+                    </div>
+                    
+                    <form action="{{ route('delivery.logout') }}" method="POST" style="display: inline;">
+                        @csrf
+                        <button type="submit" class="btn btn-link block px-4 py-2 hover:bg-gray-100"><i class="fas fa-sign-out-alt mr-2"></i>Logout</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Orders List -->
+        <div class="space-y-4">
+            @foreach($orders as $order)
+            <div class="bg-white p-4 rounded-lg shadow">
+                <div class="flex justify-between items-start mb-4">
+                    <!-- Left: Order ID and Customer Name -->
+                    <div>
+                        <h3 class="font-bold text-lg">Order #{{ $order->id }}</h3>
+                        <p class="text-gray-600">{{ ucfirst($order->user->name) }}</p>
+                    </div>
+
+                    <!-- Right: Status and Address -->
+                    <div class="text-right">
+                        <p class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs inline-block mb-1">
+                            {{ $order->status }}
+                        </p>
+                        <p class="text-sm text-gray-700 max-w-[200px]">
+                            {{ $order->shipping_address }}
+                        </p>
+                    </div>
+                </div>
+
+                <hr class="my-3 border-gray-200" />
+
+                <!-- Items List -->
+                <h4 class="font-medium mb-2">Items:</h4>
+                <ul class="space-y-4 mb-4">
+                    @foreach($order->items as $item)
+                    <li class="flex justify-between items-center border p-2 rounded-lg">
+                        <div>
+                            <span class="font-medium">{{ $item->product->name }} (x{{ $item->quantity }})</span>
+                            <p class="text-xs text-gray-600">Status: {{ $item->status }}</p>
+                            <p class="text-xs text-gray-600">Price: {{ $item->total_price }}</p>
+                            
+                        </div>
+                        <div class="flex space-x-2">
+                            <button 
+                                onclick="updateStatus({{ $item->id }}, 'Out for Delivery')" 
+                                class="bg-blue-500 text-white py-1 px-3 rounded-lg hover:bg-blue-600 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                @if($item->status === 'Delivered') disabled @endif>
+                                <i class="fas fa-truck mr-1"></i> Out
+                            </button>
+                            <button 
+                                onclick="updateStatus({{ $item->id }}, 'Delivered')" 
+                                class="bg-green-500 text-white py-1 px-3 rounded-lg hover:bg-green-600 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                @if($item->status === 'Delivered') disabled @endif>
+                                <i class="fas fa-check mr-1"></i> Delivered
+                            </button>
+                        </div>
+                    </li>
+                    @endforeach
+                </ul>
+
+
+                <!-- Totals -->
+                <div class="text-right space-y-1">
+                    <p class="text-sm">Shipping Fee: <span class="font-semibold">₱{{ number_format($order->shipping, 2) }}</span></p>
+                    <p class="text-sm font-bold text-lg">Total: ₱{{ number_format($order->total, 2) }}</p>
+                </div>
+                <!-- I WANT THIS IS WHEN ALL THE PRODUCT IN ORDERITEM STATUS IS DELIVERED THIS WILL SHOW AND YOU CAN NOW PRESS IT -->
+                <div class="flex mt-4">
+                    
+                </div>
+            </div>
+            @endforeach
+            
+            @if($orders->isEmpty())
+            <div class="text-center py-10 text-gray-500">
+                <i class="fas fa-box-open text-4xl mb-4"></i>
+                <p>No orders assigned for delivery</p>
+            </div>
+            @endif
+        </div>
+    </div>
+    
+    <script>
+        function updateStatus(itemId, status) {
+            if (confirm('Are you sure you want to update the status?')) {
+                fetch(`/delivery/update-status/${itemId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ status })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert('Error updating status: ' + (data.message || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    alert('Error updating status: ' + error.message);
+                });
+            }
+        }
+        
+        // Toggle active status
+        document.querySelector('.toggle').addEventListener('change', function() {
+            if (confirm('Are you sure you want to change your active status?')) {
+                fetch('/delivery/update-active-status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ is_active: this.checked })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        alert('Error updating active status');
+                        this.checked = !this.checked; // Revert toggle on error
+                    }
+                })
+                .catch(error => {
+                    alert('Error updating active status: ' + error.message);
+                    this.checked = !this.checked; // Revert toggle on error
+                });
+            } else {
+                // Revert toggle if the user cancels
+                this.checked = !this.checked;
+            }
+        });
+    </script>
+</body>
+</html>

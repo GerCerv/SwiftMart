@@ -1,0 +1,318 @@
+@php
+    use Illuminate\Support\Facades\Auth;
+
+    $cartItems = Auth::user()->cart()->with('product.vendor')->get();
+    $userName = Auth::user()->name; // Get user name
+    $userName = Auth::user()->email; // Get user name
+@endphp
+
+@if($cartItems->isEmpty())
+    <div class="bg-white rounded-lg shadow p-8 text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+        <h2 class="text-xl font-medium text-gray-700 mt-4">Your cart is empty</h2>
+        <p class="text-gray-500 mt-2">Start shopping to add items to your cart</p>
+        <a href="/products" class="mt-6 inline-block px-6 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors">
+            Browse Products
+        </a>
+    </div>
+@else
+    <form id="cart-form" class="bg-white rounded-lg shadow overflow-hidden">
+        @csrf
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr class="text-left text-gray-600">
+                        <th class="px-6 py-4 w-12">
+                            <input type="checkbox" id="select-all" class="rounded text-orange-500 focus:ring-orange-500">
+                        </th>
+                        <th class="px-6 py-4 font-medium">Product</th>
+                        <th class="px-6 py-4 font-medium">Unit Price</th>
+                        <th class="px-6 py-4 font-medium">Quantity</th>
+                        <th class="px-6 py-4 font-medium">Variations</th>
+                        <th class="px-6 py-4 font-medium">Total Price</th>
+                        <th class="px-6 py-4 font-medium">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    @foreach($cartItems as $item)
+                        <tr class="hover:bg-gray-50 transition-colors" data-vendor-id="{{ $item->product->vendor_id ?? '' }}">
+                            <td class="px-6 py-4">
+                                <input type="checkbox" class="select-item rounded text-orange-500 focus:ring-orange-500" 
+                                       data-id="{{ $item->product_id }}">
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center space-x-4">
+                                    <a href="{{ route('product.show', $item->product_id) }}">
+                                        <img src="{{ $item->product->image ? asset('storage/products/' . $item->product->image) : asset('images/emp.jpg') }}" 
+                                             class="w-16 h-16 object-cover rounded-lg border border-gray-200">
+                                    </a>
+                                    <div>
+                                        <div class="font-medium text-gray-900">{{ $item->product->name }}</div>
+                                        <div class="text-sm text-gray-500">Vendor: {{ $item->product->vendor->name ?? 'N/A' }}</div>
+                                        <div class="text-sm text-gray-500">Store: {{ $item->product->vendor->store_name ?? 'N/A' }}</div>
+                                        <div class="text-sm text-gray-500">Category: {{ $item->product->category }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-gray-900">
+                                @if ($item->product->discount > 0)
+                                    <span class="item-discount bg-pink-600 text-white text-xs font-bold px-1 py-1 shadow-lg transform -rotate-12 z-0" data-id="{{ $item->product_id }}">
+                                        {{ $item->product->discount }}% OFF
+                                    </span>
+                                @else
+                                    <span style="display: none;" class="item-discount text-error text-red-800 bg-red-200 font-semibold rounded-full px-2 py-1" data-id="{{ $item->product_id }}">
+                                        No Discount
+                                    </span>
+                                @endif
+                                <div>
+                                    ₱<span class="unit-price" data-id="{{ $item->product_id }}">{{ number_format($item->product->price, 2) }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 align center">
+                                <div class="flex items-center">
+                                    <button type="button" class="decrease px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded-l-md transition-colors" 
+                                            data-id="{{ $item->product_id }}">−</button>
+                                    <input type="text" class="w-12 text-center quantity border-t border-b border-gray-200 py-1" readonly
+                                           data-id="{{ $item->product_id }}" value="{{ $item->quantity }}">
+                                    <button type="button" class="increase px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded-r-md transition-colors" 
+                                            data-id="{{ $item->product_id }}">+</button>
+                                </div>
+                                <span class="text-gray-500 text-sm">{{ $item->product->stock }} {{ $item->product->category === 'vegetables' ? 'kg' : 'units' }} available</span>
+                            </td>
+                            <td class="px-6 py-4 text-gray-900 font-medium">
+                                <div>
+                                    <span class="text-sm text-gray-700">Pack Size:</span>
+                                </div>
+                                <button type="button" class="pack-size-btn text-sm {{ $item->pack_size == 1 ? 'active' : '' }}" 
+                                        data-id="{{ $item->product_id }}" data-pack-size="1">1kg</button>
+                                <button type="button" class="pack-size-btn text-sm {{ $item->pack_size == 2 ? 'active' : '' }}" 
+                                        data-id="{{ $item->product_id }}" data-pack-size="2">2kg</button>
+                                <button type="button" class="pack-size-btn text-sm {{ $item->pack_size == 5 ? 'active' : '' }}" 
+                                        data-id="{{ $item->product_id }}" data-pack-size="5">5kg</button>
+                                <input type="hidden" class="pack-size-input" data-id="{{ $item->product_id }}" value="{{ $item->pack_size ?? 1 }}">
+                            </td>
+                            <td class="px-6 py-4 text-gray-900 font-medium">
+                                ₱<span class="item-total" data-id="{{ $item->product_id }}">
+                                    {{ number_format($item->product->price * (1 - $item->product->discount / 100) * $item->quantity * ($item->pack_size ?? 1), 2) }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <button type="button" class="delete-btn text-red-600 hover:text-red-800 transition-colors" 
+                                        data-id="{{ $item->product_id }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Cart Summary -->
+        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+            <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                <div class="flex items-center space-x-4">
+                    <input type="checkbox" id="select-all-bottom" class="rounded text-orange-500 focus:ring-orange-500">
+                    <label for="select-all-bottom" class="text-gray-700">Select All</label>
+                    <button type="button" class="delete-selected text-red-600 hover:text-red-800 transition-colors flex items-center space-x-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        <span>Delete Selected</span>
+                    </button>
+                </div>
+                
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-gray-600">Subtotal:</span>
+                    <span class="font-medium">₱<span id="subtotal-price">0.00</span></span>
+                </div>
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-gray-600">Shipping:</span>
+                    <span class="font-medium">₱<span id="shipping-fee">0.00</span></span>
+                </div>
+                <div class="mb-2">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-lg font-semibold">Total:</span>
+                        <span class="text-xl font-bold text-orange-600">₱<span id="total-price">0.00</span></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Total Savings:</span>
+                        <span class="font-medium text-green-600">₱<span id="total-savings">0.00</span></span>
+                    </div>
+                </div>
+                
+                <button type="button" class="checkout-button" id="open-checkout-modal">
+                    Proceed to Checkout
+                </button>
+            </div>
+        </div>
+
+        <!-- Checkout Modal -->
+        <div id="checkout-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+            <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">Checkout</h2>
+                    <button type="button" id="close-checkout-modal" class="text-gray-600 hover:text-gray-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="mb-4">
+                    <p class="text-sm font-medium text-gray-800">Customer: <span id="checkout-user">{{ $userName }}</span></p>
+                    <p class="text-sm font-medium text-gray-800">Address: <span id="checkout-address">{{ auth()->user()->address?->address ?? 'add address' }}</span></p>
+                    <p class="text-sm font-medium text-gray-800">Phone: <span id="checkout-address">{{ auth()->user()->phone ?? 'No Phone' }}</span></p>
+                </div>
+                <div id="checkout-items" class="mb-4 max-h-64 overflow-y-auto">
+                    <!-- Selected items will be populated here -->
+                </div>
+                <div class="border-t border-gray-200 pt-4">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-gray-600">Subtotal:</span>
+                        <span class="font-medium">₱<span id="checkout-subtotal">0.00</span></span>
+                    </div>
+                    <div class="flex justify-between mb-2">
+                        <span class="text-gray-600">Discount:</span>
+                        <span class="font-medium text-green-600">₱<span id="checkout-discount">0.00</span></span>
+                    </div>
+                    <div class="flex justify-between mb-2">
+                        <span class="text-gray-600">Shipping:</span>
+                        <span class="font-medium">₱<span id="checkout-shipping">0.00</span></span>
+                    </div>
+                    <div class="flex justify-between mb-4">
+                        <span class="text-lg font-semibold">Total:</span>
+                        <span class="text-xl font-bold text-orange-600">₱<span id="checkout-total">0.00</span></span>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                        <div class="flex items-center">
+                            <input type="radio" id="cod" name="payment_method" value="cod" checked class="mr-2 text-orange-500 focus:ring-orange-500" disabled>
+                            <label for="cod" class="text-sm text-gray-700">Cash on Delivery</label>
+                        </div>
+                    </div>
+                    <button id="confirm-order" class="w-full bg-red-500 text-white py-2 rounded-md hover:bg-orange-600 transition-colors">
+                        Confirm Order
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+@endif
+<style>
+    .checkout-button {
+        width: 25%;
+        padding: 12px 24px;
+        background-color: #f97316; /* Orange-500 */
+        color: white;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .checkout-button:hover {
+        background-color: #ea580c; /* Darker Orange-600 */
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .checkout-button:active {
+        background-color: #c2410c; /* Even Darker - Orange-700 */
+    }
+
+    .checkout-button:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.5); /* focus ring */
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .animate-fade-out {
+        animation: fadeOut 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeOut {
+        from { opacity: 1; transform: translateY(0); }
+        to { opacity: 0; transform: translateY(10px); }
+    }
+
+    input.quantity {
+        -moz-appearance: textfield;
+    }
+
+    input.quantity::-webkit-outer-spin-button,
+    input.quantity::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .pack-size-btn {
+        padding: 2px 6px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background-color: white;
+        color: grey;
+        transition: all 0.2s ease;
+        margin-right: 2px;
+    }
+
+    .pack-size-btn:hover {
+        background-color: rgb(138, 255, 191);
+    }
+
+    .pack-size-btn.active {
+        background-color: #10b981;
+        color: white;
+        border-color: #10b981;
+    }
+
+    /* Modal Styles */
+    #checkout-modal {
+        z-index: 1100;
+    }
+
+    #checkout-modal .max-w-lg {
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    #checkout-modal .max-h-64 {
+        scrollbar-width: thin;
+        scrollbar-color: #ccc #f7f7f7;
+    }
+
+    #checkout-modal .max-h-64::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #checkout-modal .max-h-64::-webkit-scrollbar-track {
+        background: #f7f7f7;
+    }
+
+    #checkout-modal .max-h-64::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 3px;
+    }
+
+    @media (max-width: 640px) {
+        .checkout-button {
+            width: 100%;
+        }
+
+        #checkout-modal .max-w-lg {
+            width: 90%;
+        }
+    }
+</style>

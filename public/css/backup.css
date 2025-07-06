@@ -1,0 +1,767 @@
+body {
+    transition: background-color 0.3s, color 0.3s;
+  }
+  .dark-mode {
+    background-color: #121212;
+    color: #ffffff;
+  }
+  .dark-mode .category-card {
+    background-color: #1e1e1e;
+    box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
+  }
+  .category-card {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+  }
+  .category-card:hover {
+    transform: scale(1.05);
+  }
+  .category-img {
+    height: 180px;
+    object-fit: cover;
+  }
+  
+  .offcanvas-end {
+    width: 250px;
+  }
+  .category-img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+  }
+  
+  .carousel-item img {
+    width: 100%;
+    height: 300px; 
+    object-fit: cover;
+  }
+  
+  a {
+    text-decoration:none;
+    color:black;
+  }
+  span {
+    color:black;
+  }
+   
+  .upper-navbar a {
+    text-decoration: none; /* Remove the underline from all links */
+    
+  }
+  .cardadjust a{
+    text-decoration: none;
+  }
+  dropdown-item{
+    text-decoration: none;
+  }
+  
+  #offcanvasNavbar {
+  width: 200px !important; /* Adjust width */
+  background-color:rgba(255, 255, 255, 0.9);
+  }
+  span {
+    color:black;
+  }
+  .custom-search .form-control {
+  border-radius: 25px;
+  box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.2);
+  transition: 0.3s;
+  
+  }
+  .custom-search .form-control:focus {
+    box-shadow: 0px 5px 8px rgba(0, 0, 0, 0.3);
+  }
+  .custom-search .btn {
+    border-radius: 25px;
+  }
+  .cardadjust {
+    margin-right:50px;
+  }
+  
+  .input-group {
+    max-width: 1000px; /* Increase width */
+    width: 100%; /* Make it responsive */
+    
+  }
+  .form-control {
+    height: 55px; /* Increase height */
+    font-size: 16px; /* Bigger text */
+    
+  }
+  
+  .btn {
+    height: 55px;
+    width: 60px; /* Match button height */
+    font-size: 16px;
+  }
+  .d-flex.justify-content-center {
+    margin-bottom: 5px; /* Adjust as needed */
+  }
+  
+  
+  
+  .carousel {
+    background: url('images/slider-background.jpg') no-repeat center center; 
+    background-size: cover;
+    border-radius: 10px; /* Optional: if you want rounded corners */
+  }
+  .carousel {
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+    border-radius: 10px; /* Optional: for rounded corners */
+  }
+  .navbar {
+    padding: 10px 0;
+    background-color: #f8f9fa;
+  }
+  /* Optional: Apply a small z-index to ensure navbar stays on top of other elements */
+  .position-sticky {
+    z-index: 1030; /* Adjust the z-index as necessary to ensure it stays on top */
+  }
+  
+  
+  /* Smooth Slide-In Animation for Offcanvas */
+  .offcanvas {
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .offcanvas.show {
+    transform: translateX(0);
+  }
+  
+  
+  /* Burger Menu Animation */
+  .navbar-toggler {
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .navbar-toggler.collapsed .navbar-toggler-icon {
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .navbar-toggler.collapsed .navbar-toggler-icon::before {
+    transform: rotate(0deg);
+  }
+  
+  .navbar-toggler:not(.collapsed) .navbar-toggler-icon::before {
+    transform: rotate(45deg);
+  }
+  
+  .navbar-toggler:not(.collapsed) .navbar-toggler-icon::after {
+    transform: rotate(-45deg);
+  }
+  
+  /* Transition effects for the offcanvas header */
+  .offcanvas-header {
+    transition: opacity 0.3s ease;
+  }
+  
+  .offcanvas.show .offcanvas-header {
+    opacity: 1;
+  }
+  /* Initial Hidden State */
+  .offcanvas .nav-item {
+    opacity: 0;
+    transform: translateX(-20px); /* Start slightly off-screen */
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  
+  /* On Sidebar Open - Animate Links */
+  .offcanvas.show .nav-item {
+    opacity: 1;
+    transform: translateX(0); /* Move to the normal position */
+  }
+  
+  /* Optional: Add hover effect for links */
+  .offcanvas .nav-item:hover {
+    transform: scale(1.1);
+    transition: transform 0.2s;
+  }
+  /* Basic Style for Links */
+  .offcanvas .nav-link {
+    position: relative;
+    padding-bottom: 5px; /* Extra padding to accommodate the line */
+    transition: color 0.3s ease; /* Smooth color change */
+  }
+  
+  /* Animated Underline Effect on Hover */
+  .offcanvas .nav-link::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background-color: #007bff; /* Color of the line (can be changed) */
+    transform: scaleX(0); /* Initially scale the line to 0 */
+    transform-origin: bottom right;
+    transition: transform 0.3s ease-out;
+  }
+  
+  /* On Hover, Animate the Line */
+  .offcanvas .nav-link:hover::after {
+    transform: scaleX(1); /* Scale the line to 100% width */
+    transform-origin: bottom left;
+  }
+  
+  /* Optional: Change color of link on hover */
+  .offcanvas .nav-link:hover {
+  color: #ff0000; /* Change text color when hovered */
+  }
+  
+  /* Custom Collapse Animation */
+  #categoriesSubmenu.collapse {
+    transition: height 0.3s ease;
+  }
+  #categoriesSubmenu {
+    list-style-type: none;
+    padding-left: 0;
+  }
+  
+  #categoriesSubmenu li {
+    padding-left: 20px; /* Optional: Adds spacing to the left of subcategory items */
+  }
+  /* //NEW ADDED */
+  
+  
+  /* Icon Animations */
+  .icon-animate {
+    transition: transform 0.3s ease, color 0.3s ease, opacity 0.3s;
+    position: relative;
+  }
+  
+  /* Hover Effect */
+  .icon-animate:hover {
+    transform: scale(1.2); /* Slightly enlarge icon */
+    color: #28a745; /* Change color to green */
+  }
+  
+  /* Hover Effect: Adds Bounce */
+  .icon-animate:hover i {
+    animation: bounce 0.5s ease-in-out;
+  }
+  
+  /* Fade-in Entrance Animation */
+  .icon-animate {
+    opacity: 0;
+    animation: fadeIn 0.5s ease-in-out forwards;
+  }
+  
+  /* Keyframes for Smooth Fade-In */
+  @keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+  }
+  
+  /* Keyframes for Bounce Effect */
+  @keyframes bounce {
+    0% { transform: translateY(0); }
+    30% { transform: translateY(-5px); }
+    60% { transform: translateY(2px); }
+    100% { transform: translateY(0); }
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
+    .icon-container {
+        gap: 2rem; /* Adds more space between icons */
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .icon-container {
+        gap: 1rem; /* Slightly reduces space for smaller screens */
+    }
+  }
+  
+  
+  
+  /* anotehr new add */
+  
+  /* Small Arrow on Top */
+  .wishlist-popup::before,
+  .cart-popup::before {
+      content: "";
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-top: 1px solid #ddd;
+      border-left: 1px solid #ddd;
+  
+      transform: rotate(45deg);
+  }
+  /* Hide pop-ups by default */
+  .wishlist-popup, .cart-popup {
+    display: none; /* Ensures it's hidden initially */
+    position: absolute;
+    width: 300px;
+    min-height: 200px;
+    padding: 15px;
+    top: 140%;
+    left: -10px;
+    transform: translateX(-50%) translateY(10px);
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    background: white;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+    z-index: 10;
+  }
+  
+  /* Show popup when hovering over icon ONLY */
+  #wishlistIcon:hover + .wishlist-popup,
+  .cart-trigger:hover + .cart-popup {
+    display: block;
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  /* Also show when hovering over the pop-up itself (prevents flickering) */
+  .wishlist-popup:hover,
+  .cart-popup:hover {
+    display: block;
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  
+  /* Wishlist & Cart item layout */
+  .wishlist-popup .wishlist-items,
+  .cart-popup .cart-items {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    justify-content: center;
+  }
+  
+  .wishlist-popup img,
+  .cart-popup img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+  }
+  
+  /* Smooth fade-in animation */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+  
+  
+  
+  
+  /* Center align the content inside */
+  .cart-popup h6 {
+    margin-bottom: 10px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+  }
+  
+  /* Grid layout for items */
+  .cart-popup .cart-items {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2-column layout */
+    gap: 10px;
+    justify-content: center;
+  }
+  
+  .cart-item {
+    position: relative;
+    text-align: center;
+  }
+  
+  /* Image styles */
+  .cart-item img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+  }
+  
+  /* X Delete Icon */
+  .cart-item .delete-item {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: red;
+    color: white;
+    font-size: 12px;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  
+  /* Buy Button */
+  .cart-item .buy-btn {
+    display: block;
+    margin-top: 5px;
+    padding: 6px;
+    background: green;
+    color: white;
+    text-align: center;
+    font-size: 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  
+  .cart-item .buy-btn:hover {
+    background: darkgreen;
+  }
+  
+  
+  
+  /* //new add for log in and sign up */
+  /* Modal Body Layout */
+  .modal-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  /* Left Side Logo */
+  .login-image {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .login-image img {
+    max-width: 200px;
+    animation: fadeInLeft 0.5s ease-in-out;
+  }
+  
+  /* Right Side Form */
+  .login-form {
+    flex: 2;
+    padding-left: 20px;
+  }
+  
+  /* Animation for Logo */
+  @keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+  }
+  
+  
+  
+  /* category */
+  /* Category Button */
+  
+  
+  
+  
+  /* Popup Box */
+  .category-popup {
+    
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    width: 280px; /* Increased width */
+    padding: 15px; /* More spacing */
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    display: none; /* Initially hidden */
+    opacity: 0;
+    transform: translateY(-10px); /* Start slightly above */
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+  }
+  
+  /* Grid Layout for Categories */
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 columns */
+    gap: 10px; /* Space between items */
+  }
+  
+  /* Show Popup with Slide-Down Animation */
+  #categoryButton:focus + .category-popup {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .category-popup button {
+    border: 1px solid #63dd12 !important; /* Dark border */
+    color: #44ca22 !important; /* Dark text */
+    background-color: white !important; /* White background */
+  }
+  
+  .category-popup button:hover {
+    background-color: #333 !important; /* Dark background on hover */
+    color: white !important; /* White text on hover */
+  }
+  
+  /* new global */
+  a {
+    font-family: 'Poppins', sans-serif;
+  }
+  button {
+    font-family: 'Poppins', sans-serif;
+  }
+  span {
+    font-family: 'Poppins', sans-serif;
+  }
+  /* LINK NAV BAR ANIMATION */
+  .custom-nav-link {
+    position: relative;
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    transition: all 0.3s ease-in-out;
+    text-transform: uppercase;
+    padding: 8px 12px;
+    margin-left:10px;
+  }
+  
+  .custom-nav-link::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 0;
+    height: 2px;
+    background-color: #28a745;
+    transition: all 0.3s ease-in-out;
+    transform: translateX(-50%);
+  }
+  
+  .custom-nav-link:hover {
+    color: #28a745;
+    transform: scale(1.1);
+  }
+  
+  .custom-nav-link:hover::after {
+    width: 100%;
+  }
+  
+  /* Responsive Styling */
+  @media (max-width: 992px) {
+    .navbar-nav {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+  }
+  
+  
+  
+  .slider-container {
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .slider {
+    display: flex;
+  }
+  
+  .slider-item {
+    flex: 0 0 auto;
+    width: 50%; /* 2 items per row */
+    margin-right: 15px; /* Add spacing between items */
+  }
+  
+  .category-img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+  
+  .text-center h5 {
+    margin-top: 10px;
+  }
+  
+  
+  
+  
+  
+  /* new add */
+  .upper-navbar {
+    background-color: #ffffff; /* Light mode background */
+    transition: background-color 0.3s ease-in-out;
+    
+  }
+  
+  /* Dark Mode Styles */
+  .upper-navbar.dark-mode {
+    background-color: #919191; /* Dark mode background */
+  }
+  
+  /* Adjust text color for dark mode */
+  .upper-navbar.dark-mode a {
+    color: #ffffff !important;
+  }
+  
+  /* Adjust dropdown menu for dark mode */
+  .upper-navbar.dark-mode .dropdown-menu {
+    background-color: #444444;
+  }
+  
+  /* Switch input for dark mode */
+  .upper-navbar.dark-mode .form-check-input {
+    background-color: #555555;
+  }
+  
+  /* Navbar links color */
+  .upper-navbar a {
+    color: #333333;
+  }
+  
+  .upper-navbar .dropdown-menu a {
+    color: #333333;
+  }
+  
+  /* Navbar Links Hover Effects */
+  .upper-navbar a:hover,
+  .upper-navbar .dropdown-item:hover {
+    color: #00b894;
+  }
+  
+  
+  /* signup */
+  /* Make the modal even wider */
+  .modal-lg {
+    max-width: 1000px; /* Increase width */
+    width: 95%; /* Make it take more space */
+  }
+  
+  /* Modal Layout */
+  .modal-body {
+    display: flex;
+    align-items: stretch;
+    padding: 0;
+    height: 100%;
+  }
+  
+  /* Left Side: Logo */
+  .left-side {
+    width: 45%;
+    background-color: #198754; /* Green */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+  }
+  
+  .logo {
+    width: 250px;
+  }
+  
+  /* Right Side: Form */
+  .right-side {
+    width: 55%;
+    background-color: #f8f9fa; /* Light Gray */
+    padding: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  /* Form Styling */
+  .form-control {
+    background: white;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    padding: 12px;
+  }
+  
+  /* Button */
+  button {
+    padding: 12px;
+    border-radius: 5px;
+  }
+  
+  /* Mobile Responsive */
+  @media (max-width: 768px) {
+    .modal-lg {
+      max-width: 95%; /* Reduce modal width */
+      
+  
+    }
+    .modal-body {
+        flex-direction: column;
+        
+    }
+    .left-side, .right-side {
+        width: 100%;
+    }
+    .left-side {
+        padding: 20px;
+        
+    }
+    .right-side {
+        padding: 30px;
+        
+    }
+    .logo {
+      width: 180px;
+    }
+    
+    
+  }
+  
+  /* login design */
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  /* For larger screens */
+  @media (min-width: 768px) {
+    .search-container {
+        max-width: 1000px;
+        width:100%;
+        margin-left:200px;
+        
+    }
+  }
+  
+  /* For mobile screens */
+  @media (max-width: 767px) {
+    .search-container {
+        width: 80%; /* Makes search bar take up 80% of the width */
+        margin: 0 auto; /* Centers the search bar */
+    }
+  }
+  

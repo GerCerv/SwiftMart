@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ $product->name }} - Fresh Vegetables</title>
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/modal.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/uppernav.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/middlenav.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/popups.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/lowernav.css') }}" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/YOUR-FONTAWESOME-KIT.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(to bottom, #f0fdf4, #ffffff);
+        }
+        .product-card {
+            background: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+        }
+        .main-image img {
+            transition: transform 0.5s ease;
+        }
+        .main-image:hover img {
+            transform: scale(1.1);
+        }
+        .thumbnail {
+            cursor: pointer;
+            border: 2px solid transparent;
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        .thumbnail:hover, .thumbnail.active {
+            border-color: #10b981;
+            transform: scale(1.05);
+        }
+        .pack-size-btn {
+            border: 1px solid #e5e7eb;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .pack-size-btn:hover {
+            background: #f3f4f6;
+            transform: translateY(-2px);
+        }
+        .pack-size-btn.active {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+        .quantity-btn {
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        .quantity-btn:hover:not(:disabled) {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+        }
+        .quantity-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .quantity-input {
+            width: 4rem;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            padding: 0.5rem;
+        }
+        input.quantity-input::-webkit-outer-spin-button,
+        input.quantity-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input.quantity-input {
+            -moz-appearance: textfield;
+        }
+        .action-btn {
+            padding: 0.75rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .add-to-cart-btn {
+            background: #22c55e;
+            color: white;
+            border: 1px solid rgb(255, 255, 255);
+        }
+        .add-to-cart-btn:hover {
+            background: #16a34a;
+            border-color: #16a34a;
+            transform: translateY(-2px);
+        }
+        .buy-now-btn {
+            background: #ef4444;
+            color: white;
+            border: 1px solid #ef4444;
+        }
+        .buy-now-btn:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+        .wishlist-btn {
+            
+            
+            padding: 0.75rem 2rem;
+            border-radius: 0.75rem;
+            border:1px solid rgb(214, 214, 214);
+            padding: 0.75rem;
+            background: #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            
+        }
+        .wishlist-btn:hover {
+            background: #f3f4f6;
+            transform: scale(1.1);
+        }
+        .description-card {
+            background: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+            padding: 2.5rem;
+        }
+        .vendor-card {
+            background: #ecfdf5;
+            border-radius: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        .vendor-card:hover {
+            transform: translateY(-5px);
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .animate-fade-out {
+            animation: fadeOut 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(10px); }
+        }
+        /* Pricing Section Animations */
+        .price-container {
+            animation: slideUp 0.5s ease-out forwards;
+        }
+        .price-text {
+            transition: transform 0.3s ease, color 0.3s ease;
+        }
+        .price-text:hover {
+            transform: scale(1.1);
+            color: #059669;
+        }
+        .original-price {
+            transition: transform 0.3s ease, color 0.3s ease;
+        }
+        .original-price:hover {
+            transform: scale(1.05);
+            color: #6b7280;
+        }
+        .discount-badge {
+            transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        }
+        .discount-badge:hover {
+            transform: scale(1.1);
+            background-color: #10b981;
+            color: #ffffff;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 768px) {
+            .product-card {
+                padding: 1.5rem;
+            }
+            .main-image {
+                height: 16rem;
+            }
+            .thumbnail {
+                width: 4rem;
+                height: 4rem;
+            }
+            .action-btn {
+                padding: 0.5rem 1.5rem;
+                font-size: 0.875rem;
+            }
+            .price-text {
+                font-size: 2rem;
+            }
+        }
+        /* Divider Styling */
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #10b981, transparent);
+            opacity: 0;
+            animation: fadeInDivider 0.6s ease-out forwards;
+            margin-left: auto;
+            margin-right: auto;
+            width: 80%;
+        }
+        @keyframes fadeInDivider {
+            from { opacity: 0; width: 0; }
+            to { opacity: 1; width: 80%; }
+        }
+        .pack-size-btn {
+            padding: 4px 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background-color: white;
+            color: grey;
+            transition: all 0.2s ease;
+        }
+
+        .pack-size-btn:hover {
+            background-color: #f3f4f6; /* Tailwind gray-100 */
+        }
+
+        .pack-size-btn.active {
+            background-color: #10b981; /* Tailwind blue-500 */
+            color: white;
+            border-color: #10b981;
+        }
+    </style>
+</head>
+<body>
+    <x-uppernav />
+    <x-loginmodal />
+    <x-signupmodal />
+    <x-middlenav />
+    <x-lowernav />
+    <x-sidebar />
+
+        
+    <div class="container mx-auto px-4 py-12 max-w-7xl">
+        <nav class="flex items-center text-sm text-gray-600 mb-3 ml-3 -mt-6 ">
+            <div class="inline-flex items-center space-x-2 border-b border-grey-400 ">
+                <a href="{{ url('/home') }}" class="text-green-700 hover:text-green-500 hover:underline transition-colors"><i class="fa fa-home mr-2"></i>Home</a>
+                <span class="text-gray-400">/</span>
+                <a href="{{ url('/shop') }}" class="text-green-700 hover:text-green-500 hover:underline transition-colors"> <i class="fa fa-shopping-bag mr-2"></i>Shop</a>
+                <span class="text-gray-400">/</span>
+                <a href="{{ url('/vendor') }}" class="text-green-600 hover:text-green-600 hover:underline transition-colors"><i class="fas fa-store mr-2"></i>{{ ucfirst($product->vendor->store_name) }}</a>
+                <span class="text-gray-400">/</span>
+                <span>Product</span>
+                <span class="text-gray-400">/</span>
+                <span class="font-medium text-gray-900">{{ ucfirst(strtolower($product->name)) }}</span>
+            </div>
+            
+        </nav>
+        
+        <!-- Product Section -->
+        <div class="product-card p-8 md:flex md:space-x-8 mb-12 border border-green-600">
+            <!-- Wishlist Button -->
+            
+
+            <!-- Image Gallery -->
+            <div class="md:w-1/2">
+                <div x-data="{
+                    images: [
+                        @if($product->image) '{{ asset('storage/products/' . $product->image) }}', @endif
+                        @if($product->image2) '{{ asset('storage/products/' . $product->image2) }}', @endif
+                        @if($product->image3) '{{ asset('storage/products/' . $product->image3) }}', @endif
+                        @if($product->image4) '{{ asset('storage/products/' . $product->image4) }}', @endif
+                        @if($product->image5) '{{ asset('storage/products/' . $product->image5) }}' @endif
+                    ],
+                    active: 0
+                }">
+                    <!-- Main Image -->
+                    <div class="main-image h-96 bg-gray-100 flex items-center justify-center overflow-hidden rounded-2xl mb-6 relative">
+                        @if($product->discount > 0)
+                            <!-- Discount Badge on top of the image -->
+                            <div class="absolute top-8 -right-16 bg-pink-600 text-white text-2xl font-extrabold px-16 py-2  shadow-lg transform rotate-45 hover:scale-110 transition-transform duration-300 z-50">
+                                {{ $product->discount }}% OFF
+                            </div>
+                        @endif
+
+                        <template x-if="images.length > 0">
+                            <img :src="images[active]" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                        </template>
+                        <template x-if="images.length === 0">
+                            <i class="fas fa-image text-4xl text-gray-300"></i>
+                        </template>
+                    </div>
+                    <!-- Thumbnails -->
+                    <div class="flex space-x-3 justify-center">
+                        <template x-for="(image, index) in images" :key="index">
+                            <img :src="image" 
+                                 @click="active = index" 
+                                 class="w-20 h-20 object-cover rounded thumbnail" 
+                                 :class="{ 'active': active === index }">
+                        </template>
+                    </div>
+                </div>
+                
+                        <div class="flex items-center space-x-2 mt-4">
+                            <!-- wishilist  -->
+                        @if($product->wishlists->count() > 0)
+                        <i class="bi bi-heart-fill text-red-500"></i>
+                        <span class="text-sm text-gray-600"><i class="far fa-heart text-red-600"></i> by {{ $product->wishlists->count() }} people</span>
+                        @endif
+                            <!-- cart  -->
+                        @if($product->carts->count() > 0)
+                        <i class="bi bi-heart-fill text-red-500 items-end"></i>
+                        <span class="text-sm text-gray-600"><i class="fas fa-shopping-basket text-green-600"></i> by {{ $product->carts->count() }} people</span>
+                        @endif
+                        <i class="fas fa-shopping-cart text-green-600"></i>
+                        <span class="text-sm text-gray-600">Number of Sold</span>
+                        <i class="fas fa-store text-green-600"></i>
+                        <span class="text-sm text-gray-600">Social Account:<a href="https://facebook.com">
+                        <i class="fab fa-facebook text-blue-600 ml-2"></i>
+                        </a>
+                        <a href="https://instagram.com">
+                        <i class="fab fa-instagram text-pink-600 ml-2"></i>
+                        </a></span>
+                        
+                        </div>
+            </div>
+
+            <!-- Product Details -->
+            <div class="md:w-1/2 mt-8 md:mt-0">
+                <h1 class="text-3xl md:text-4xl font-bold mb-3 text-gray-800">{{ $product->name }}</h1>
+                <div class="flex items-center mb-4">
+                    <div class="flex text-yellow-400">
+                        @for($i = 0; $i < 5; $i++)
+                            <i class="fas fa-star"></i>
+                        @endfor
+                    </div>
+                    <span class="ml-3 text-gray-500 text-sm">({{ $product->id * 10 }}+ Ratings | {{ $product->id * 20 }}+ Sold)</span>
+                </div>
+                <!-- LINE  -->
+                <div class="divider my-4"></div>
+                <!-- Animated Pricing Section -->
+                @if($product->vendor)
+                    <div class="flex items-baseline mb-6 price-container">
+                        @if($product->discount > 0)
+                            <!-- {{-- Discounted price --}} -->
+                            <span class="text-4xl font-bold text-green-600 price-text">
+                                ₱{{ number_format($product->price - ($product->price * ($product->discount / 100)), 2) }}
+                            </span>
+                            <!-- {{-- Original price crossed out --}} -->
+                            <span class="ml-3 text-gray-400 line-through text-lg original-price">
+                                ₱{{ number_format($product->price, 2) }}
+                            </span>
+                            <!-- {{-- Discount badge --}} -->
+                            <span class="ml-3 bg-green-100 text-green-600 px-2 py-1 rounded-full text-sm font-semibold discount-badge">
+                                {{ $product->discount }}% off
+                            </span>
+                        @else
+                            <!-- {{-- No discount, show only regular price --}} -->
+                            <span class="text-4xl font-bold text-green-600 price-text">
+                                ₱{{ number_format($product->price, 2) }}
+                            </span>
+                        @endif
+                    </div>
+                @endif
+
+                @if($product->vendor)
+                <p class="text-l text-black-700 font-semibold mb-2 "><i class="fas fa-store text-green-700 text-l"></i> {{ ucfirst($product->vendor->store_name) }}</p>
+                @endif
+
+                <div class="mb-6">
+                    <h5 class="text-l font-semibold">Category:
+                    <span class="text-lg {{ $product->stock < 10 ? 'text-red-500 font-semibold' : 'text-green-700 font-semibold' }}">
+                         {{ $product->category }}
+                    </span>
+                    </h5>
+                </div>
+
+                <!-- Pack Size Options -->
+                <!-- Pack Size Options in a Straight Line -->
+                <div class="mb-6 flex items-center space-x-2" x-data="{ selectedPack: '1 kg' }">
+                    <span class="text-sm font-semibold text-gray-700 mr-2">Pack Size:</span>
+
+                    <button 
+                        class="pack-size-btn text-sm" 
+                        :class="{ 'active': selectedPack === '1 kg' }" 
+                        @click="selectedPack = '1 kg'">
+                        1kg
+                    </button>
+                    
+                    
+
+                    <button 
+                        class="pack-size-btn text-sm" 
+                        :class="{ 'active': selectedPack === '2 kg' }" 
+                        @click="selectedPack = '2 kg'">
+                        2kg
+                    </button>
+
+                    
+
+                    <button 
+                        class="pack-size-btn text-sm" 
+                        :class="{ 'active': selectedPack === '5 kg' }" 
+                        @click="selectedPack = '5 kg'">
+                        5kg
+                    </button>
+                </div>
+
+                <!-- Quantity Selector -->
+                <div class="mb-6">
+                    <p class="text-sm font-semibold mb-3 text-gray-700">Quantity:</p>
+                    <div class="flex items-center space-x-3">
+                        <button type="button" class="decrease quantity-btn px-3 py-1">
+                            −
+                        </button>
+                        <input type="text" class="quantity-input text-center py-1" 
+                               id="quantity-input" value="{{ $cart->quantity ?? 1 }}">
+                        <button type="button" class="increase quantity-btn px-3 py-1">
+                            +
+                        </button>
+                        <span class="text-gray-500 text-sm ml-3">{{ $product->stock }} {{ $product->category === 'vegetables' ? 'kg' : 'units' }} available</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex space-x-4 mb-6">
+                    <button 
+                        class="add-to-cart-btn action-btn" 
+                        data-product-id="{{ $product->id }}"
+                        data-product-name="{{ $product->name }}"
+                        data-product-price="{{ number_format($product->price, 2, '.', '') }}"
+                        data-product-image="{{ $product->image ? asset('storage/products/' . $product->image) : asset('images/emp.jpg') }}"
+                        data-product-store="{{ $product->vendor ? $product->vendor->store_name : 'Unknown' }}"
+                        data-product-category="{{ $product->category }}"
+                        data-product-stock="{{ $product->stock }}"
+                        {{ $product->stock < 1 ? 'disabled' : '' }}>
+                        Add to Cart
+                    </button>
+                    <button 
+                        class="buy-now-btn action-btn" 
+                        data-product-id="{{ $product->id }}"
+                        {{ $product->stock < 1 ? 'disabled' : '' }}>
+                        Buy Now
+                    </button>
+                    <div class="flex items-center">
+                        @auth
+                            <button 
+                                class="wishlist-btn p-2 px-3 py-2  {{ auth()->user()->hasInWishlist($product->id) ? 'text-red-500' : 'text-gray-400' }}"
+                                data-product-id="{{ $product->id }}"
+                                data-product-name="{{ $product->name }}"
+                                data-product-price="{{ number_format($product->price, 2, '.', '') }}"
+                                data-product-image="{{ $product->image ? asset('storage/products/' . $product->image) : asset('images/emp.jpg') }}"
+                                title="{{ auth()->user()->hasInWishlist($product->id) ? 'Remove from Wishlist' : 'Add to Wishlist' }}"
+                                data-product-stock="{{ $product->stock }}">
+                                <i class="fa-heart {{ auth()->user()->hasInWishlist($product->id) ? 'fas' : 'far' }} text-l"></i>
+                            </button>
+                        @else
+                            <a href="{{ route('login') }}" 
+                            class="wishlist-btn p-2 rounded-full text-gray-400"
+                            title="Login to add to wishlist">
+                                <i class="far fa-heart text-xl"></i>
+                            </a>
+                        @endauth
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vendor Card -->
+        <div class="vendor-card p-6 flex flex-col md:flex-row items-center justify-between mb-12 border-2 border-green-600 rounded-2xl bg-white shadow-sm">
+            <div class="flex items-center space-x-4">
+                <div class="bg-green-100 p-4 rounded-full">
+                    <i class="fas fa-store text-green-600 text-2xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800 capitalize">{{ $product->vendor->store_name }}</h2>
+                    <p class="text-sm text-green-600">Freshly picked from our farms!</p>
+                </div>
+            </div>
+            <a href="{{ route('product.show', $product->id) }}"
+            class="mt-4 md:mt-0 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full flex items-center space-x-2 transition duration-200">
+                <i class="fas fa-store"></i>
+                <h6>View Product</h6>
+            </a>
+        </div>
+
+
+        <!-- Product Description -->
+        <div class="description-card border border-green-600">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800">Product Description</h2>
+            <p class="text-gray-600 mb-6 leading-relaxed">{{ $product->description }}</p>
+            <ul class="list-disc pl-6 text-gray-600 space-y-2">
+                <li>Freshly harvested {{ $product->name }} from local farms</li>
+                <li>Category: {{ ucfirst($product->category) }}</li>
+                <li>Weight options: 1 kg, 2 kg, 5 kg</li>
+                <li>Storage: Keep refrigerated for best freshness</li>
+                <li>Origin: {{ $product->vendor ? $product->vendor->store_name : 'Local Farm' }}</li>
+            </ul>
+        </div>
+    </div>
+
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Quantity controls
+            function setupQuantityControls() {
+                const maxStock = {{ $product->stock }};
+                const increaseBtn = document.querySelector('.increase');
+                const decreaseBtn = document.querySelector('.decrease');
+                const qtyInput = document.querySelector('#quantity-input');
+
+                increaseBtn.addEventListener('click', () => {
+                    let qty = parseInt(qtyInput.value);
+                    if (qty < maxStock) {
+                        qtyInput.value = qty + 1;
+                    }
+                });
+
+                decreaseBtn.addEventListener('click', () => {
+                    let qty = parseInt(qtyInput.value);
+                    if (qty > 1) {
+                        qtyInput.value = qty - 1;
+                    }
+                });
+
+                qtyInput.addEventListener('change', () => {
+                    let qty = parseInt(qtyInput.value);
+                    if (isNaN(qty) || qty < 1) {
+                        qtyInput.value = 1;
+                    } else if (qty > maxStock) {
+                        qtyInput.value = maxStock;
+                    }
+                });
+            }
+
+            // Wishlist functionality
+            document.querySelectorAll('.wishlist-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    @auth
+                        const productId = this.getAttribute('data-product-id');
+                        const isInWishlist = this.classList.contains('text-red-500');
+                        const url = isInWishlist ? `/wishlist/remove/${productId}` : `/wishlist/add/${productId}`;
+                        const method = isInWishlist ? 'DELETE' : 'POST';
+
+                        this.disabled = true;
+
+                        fetch(url, {
+                            method: method,
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                const icon = this.querySelector('i');
+                                if (isInWishlist) {
+                                    this.classList.replace('text-red-500', 'text-gray-400');
+                                    icon.classList.replace('fas', 'far');
+                                    this.setAttribute('title', 'Add to Wishlist');
+                                    const event = new CustomEvent('wishlist-updated', {
+                                        detail: { 
+                                            productId: productId, 
+                                            action: 'removed',
+                                            countChange: -1
+                                        }
+                                    });
+                                    document.dispatchEvent(event);
+                                } else {
+                                    this.classList.replace('text-gray-400', 'text-red-500');
+                                    icon.classList.replace('far', 'fas');
+                                    this.setAttribute('title', 'Remove from Wishlist');
+                                    const event = new CustomEvent('wishlist-updated', {
+                                        detail: { 
+                                            productId: productId, 
+                                            action: 'added',
+                                            countChange: 1,
+                                            product: {
+                                                id: productId,
+                                                name: this.getAttribute('data-product-name'),
+                                                price: parseFloat(this.getAttribute('data-product-price')),
+                                                image: this.getAttribute('data-product-image')
+                                            }
+                                        }
+                                    });
+                                    document.dispatchEvent(event);
+                                }
+                            } else {
+                                showToast(data.message, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            showToast('An error occurred. Please try again.', 'error');
+                        })
+                        .finally(() => {
+                            this.disabled = false;
+                        });
+                    @else
+                        const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+                        loginModal.show();
+                        const feedback = document.createElement('div');
+                        feedback.className = 'alert alert-warning position-fixed top-0 start-50 translate-middle-x mt-3';
+                        feedback.style.zIndex = '1100';
+                        feedback.textContent = 'Please login to use wishlist';
+                        document.body.appendChild(feedback);
+                        setTimeout(() => {
+                            feedback.style.opacity = '0';
+                            setTimeout(() => feedback.remove(), 300);
+                        }, 3000);
+                    @endauth
+                });
+            });
+
+            // Add to cart functionality
+            document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    @auth
+                        const productId = this.getAttribute('data-product-id');
+                        const qtyInput = document.querySelector('#quantity-input');
+                        const quantity = parseInt(qtyInput.value);
+                        this.disabled = true;
+
+                        if (isNaN(quantity) || quantity < 1) {
+                            showToast('Please select a valid quantity.', 'error');
+                            this.disabled = false;
+                            return;
+                        }
+
+                        // Debug: Log the quantity being sent
+                        console.log('Sending quantity to backend:', quantity);
+
+                        // Add or update the product in the cart
+                        fetch(`/cart/adds/${productId}`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ quantity: quantity })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                const isInCart = data.message.includes('updated'); // Determine if this was an update
+                                const countChange = isInCart ? 0 : 1; // Increment by 1 only if it's a new product
+
+                                const event = new CustomEvent('cart-updated', {
+                                    detail: {
+                                        productId: productId,
+                                        action: isInCart ? 'updated' : 'added',
+                                        countChange: countChange,
+                                        product: {
+                                            id: productId,
+                                            name: this.getAttribute('data-product-name'),
+                                            price: parseFloat(this.getAttribute('data-product-price')),
+                                            image: this.getAttribute('data-product-image'),
+                                            store_name: this.getAttribute('data-product-store'),
+                                            category: this.getAttribute('data-product-category'),
+                                            quantity: data.quantity, // Use the quantity returned from the backend
+                                            stock: parseFloat(this.getAttribute('data-product-stock')),
+                                        }
+                                    }
+                                });
+                                document.dispatchEvent(event);
+                                showToast(data.message, 'success'); // Use the message from the backend
+                            } else {
+                                showToast(data.message, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            showToast('An error occurred. Please try again.', 'error');
+                            console.error('Error adding to cart:', error);
+                        })
+                        .finally(() => {
+                            this.disabled = false;
+                        });
+                    @else
+                        const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+                        loginModal.show();
+                        const feedback = document.createElement('div');
+                        feedback.className = 'alert alert-warning position-fixed top-0 start-50 translate-middle-x mt-3';
+                        feedback.style.zIndex = '1100';
+                        feedback.textContent = 'Please login to use cart';
+                        document.body.appendChild(feedback);
+                        setTimeout(() => {
+                            feedback.style.opacity = '0';
+                            setTimeout(() => feedback.remove(), 300);
+                        }, 3000);
+                    @endauth
+                });
+            });
+
+            // Buy now functionality
+            document.querySelectorAll('.buy-now-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const productId = this.getAttribute('data-product-id');
+                    const qtyInput = document.querySelector('#quantity-input');
+                    const quantity = parseInt(qtyInput.value);
+
+                    if (isNaN(quantity) || quantity < 1) {
+                        showToast('Please select a valid quantity.', 'error');
+                        return;
+                    }
+
+                    @auth
+                        window.location.href = `/checkout?product_id=${productId}&quantity=${quantity}`;
+                    @else
+                        const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+                        loginModal.show();
+
+                        const feedback = document.createElement('div');
+                        feedback.className = 'alert alert-warning position-fixed top-0 start-50 translate-middle-x mt-3';
+                        feedback.style.zIndex = '1100';
+                        feedback.textContent = 'Please login to buy products';
+                        document.body.appendChild(feedback);
+
+                        setTimeout(() => {
+                            feedback.style.opacity = '0';
+                            setTimeout(() => feedback.remove(), 300);
+                        }, 3000);
+                    @endauth
+                });
+            });
+
+            // Toast notification function
+            function showToast(message, type = 'success') {
+                const toast = document.createElement("div");
+                toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg animate-fade-in ${
+                    type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+                }`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.classList.add("animate-fade-out");
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+
+            // Initialize quantity controls
+            setupQuantityControls();
+        });
+    </script>
+</body>
+</html>

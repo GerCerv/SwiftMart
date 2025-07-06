@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Delivery Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-4">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold">Delivery Dashboard</h1>
+            
+            <!-- Profile Dropdown -->
+            <div class="relative">
+                <button id="dropdownButton" class="flex items-center space-x-2 focus:outline-none">
+                    <img src="{{ $deliveryMan->profile_image ? asset('storage/'.$deliveryMan->profile_image) : asset('images/default-profile.jpg') }}" 
+                         alt="{{ $deliveryMan->name }}" 
+                         class="w-10 h-10 rounded-full object-cover">
+                    <span>{{ $deliveryMan->name }}</span>
+                    <i class="fas fa-chevron-down ml-1"></i>
+                </button>
+                
+                <div id="dropdownMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded shadow-lg z-10">
+                    <div class="px-4 py-2 hover:bg-gray-100">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" class="toggle mr-2" {{ $deliveryMan->is_active ? 'checked' : '' }}>
+                            <span>Active</span>
+                        </label>
+                    </div>
+                    <form action="{{ route('delivery.logout') }}" method="POST" class="border-t">
+                        @csrf
+                        <button type="submit" class="w-full text-left px-4 py-2 hover:bg-gray-100">
+                            <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Orders List -->
+        <div class="space-y-4">
+            @forelse($orders as $order)
+            <div class="bg-white p-4 rounded-lg shadow">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 class="font-bold text-lg">Order #{{ $order->id }}</h3>
+                        <p class="text-gray-600">{{ $order->user->name }}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="inline-block px-2 py-1 rounded text-xs mb-1
+                            {{ $order->status == 'Ready for Pickup' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800' }}">
+                            {{ $order->status }}
+                        </span>
+                        <p class="text-sm text-gray-700 max-w-[200px] break-words">{{ $order->shipping_address }}</p>
+                    </div>
+                </div>
+
+                <h4 class="font-medium mb-2">Items:</h4>
+                <ul class="space-y-1 mb-4">
+                    @foreach($order->items as $item)
+                    <li class="flex justify-between">
+                        <span>{{ $item->product->name }} (x{{ $item->quantity }})</span>
+                        <span>₱{{ number_format($item->unit_price * $item->quantity, 2) }}</span>
+                    </li>
+                    @endforeach
+                </ul>
+
+                <div class="text-right space-y-1">
+                    <p class="text-sm">Discount: <span class="font-semibold">₱{{ number_format($order->discount, 2) }}</span></p>
+                    <p class="text-lg font-bold">Total: ₱{{ number_format($order->total, 2) }}</p>
+                </div>
+                
+                <div class="flex space-x-2 mt-4">
+                    <button onclick="updateStatus({{ $order->id }}, 'Out for Delivery')" 
+                            class="flex-1 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
+                        <i class="fas fa-truck mr-2"></i> Out for Delivery
+                    </button>
+                    <button onclick="updateStatus({{ $order->id }}, 'Delivered')" 
+                            class="flex-1 bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600">
+                        <i class="fas fa-check mr-2"></i> Delivered
+                    </button>
+                </div>
+            </div>
+            @empty
+            <div class="text-center py-10 text-gray-500">
+                <i class="fas fa-box-open text-4xl mb-4"></i>
+                <p>No orders assigned for delivery</p>
+            </div>
+            @endforelse
+        </div>
+    </div>
+
+    <script>
+        // Dropdown toggle
+        const dropdownButton = document.getElementById('dropdownButton');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+        dropdownButton.addEventListener('click', () => {
+            dropdownMenu.classList.toggle('hidden');
+        });
+
+        // Update order status
+        async function updateStatus(orderId, status) {
+            if (confirm('Are you sure you want to update the status?')) {
+                try {
+                    const response = await fetch(`/delivery/update-status/${orderId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({ status })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error updating status: ' + (data.message || 'Unknown error'));
+                    }
+                } catch (error) {
+                    alert('Error updating status: ' + error.message);
+                }
+            }
+        }
+
+        // Toggle active status
+        document.querySelector('.toggle').addEventListener('change', async function() {
+            if (confirm('Are you sure you want to change your active status?')) {
+                try {
+                    const response = await fetch('/delivery/update-active-status', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({ is_active: this.checked })
+                    });
+                    const data = await response.json();
+                    if (!data.success) {
+                        alert('Error updating active status');
+                        this.checked = !this.checked;
+                    }
+                } catch (error) {
+                    alert('Error updating active status: ' + error.message);
+                    this.checked = !this.checked;
+                }
+            } else {
+                this.checked = !this.checked;
+            }
+        });
+
+        // Close dropdown on outside click
+        window.addEventListener('click', (e) => {
+            if (!dropdownButton.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                dropdownMenu.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

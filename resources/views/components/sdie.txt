@@ -1,0 +1,58 @@
+<!-- Sidebar (Offcanvas) - Mobile Dark Mode -->
+<div class="offcanvas offcanvas-end" id="offcanvasNavbar">
+    <div class="offcanvas-header">
+        <h5>Menu</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        <ul class="nav flex-column">
+            <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
+            
+            <!-- Categories with Subcategories -->
+            <li class="nav-item">
+                <a class="nav-link" href="#!" data-bs-toggle="collapse" data-bs-target="#categoriesSubmenu" aria-expanded="false" aria-controls="categoriesSubmenu">
+                    Categories  <i class="fa fa-angle-double-down"></i>
+                </a>
+                <!-- Subcategories Menu (Hidden Initially) -->
+                <ul class="collapse" id="categoriesSubmenu">
+                    <li><a class="nav-link" href="{{ route('usersnavs.shop') }}?category=Vegetables">Vegetables</a></li>
+                    <li><a class="nav-link" href="{{ route('usersnavs.shop') }}?category=Fruits">Fruits</a></li>
+                    <li><a class="nav-link" href="{{ route('usersnavs.shop') }}?category=Meat">Meat</a></li>
+                    <li><a class="nav-link" href="{{ route('usersnavs.shop') }}?category=Seafood">SeaFood</a></li>
+                    <li><a class="nav-link" href="{{ route('usersnavs.shop') }}?category=Spices">Spices</a></li>
+                </ul>
+            </li>
+
+            <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
+        </ul>
+
+        <!-- Wishlist, Cart, and Account -->
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center" href="#">
+                <i class="fas fa-heart" style="margin-right:3px;"></i>Wishlist
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center" href="#">
+                <i class="fas fa-shopping-cart" style="margin-right:3px;"> </i> Cart
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center" href="#">
+                <i class="fas fa-user" style="margin-right:3px;"></i> Account
+                </a>
+            </li>
+        </ul>
+
+        <hr>
+
+        <!-- Dark Mode (Mobile) -->
+        <div class="d-flex align-items-center d-lg-none">
+            <span class="me-2">🌙</span>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="darkModeSwitchMobile">
+            </div>
+        </div>
+    </div>
+</div>

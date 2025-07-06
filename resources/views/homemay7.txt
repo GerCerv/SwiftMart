@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>FreshMarket | Organic Vegetables</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/modal.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/uppernav.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/middlenav.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/popups.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/lowernav.css') }}" />
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/YOUR-FONTAWESOME-KIT.js" crossorigin="anonymous"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <style>
+        :root {
+            --primary: #2f855a;
+            --primary-dark: #276749;
+            --secondary: #f56565;
+            --accent: #f6e05e;
+            --dark: #1a202c;
+            --light: #f7fafc;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background: linear-gradient(to bottom, var(--light), #e6fffa);
+            color: var(--dark);
+            transition: all 0.3s ease;
+            overflow-x: hidden;
+        }
+
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background: #1a202c;
+            color: #e2e8f0;
+        }
+        .dark-mode .card, .dark-mode .product-card, .dark-mode .category-card, .dark-mode .hot-deals-card {
+            background: #2d3748;
+            border-color: #4a5568;
+        }
+        .dark-mode .text-dark {
+            color: #e2e8f0 !important;
+        }
+        .dark-mode .bg-light {
+            background: #2d3748 !important;
+        }
+
+        /* Product Cards */
+        .product-card {
+            transition: all 0.4s ease;
+            border: none;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            background: #ffffff;
+        }
+        .product-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+            border: 2px solid var(--primary);
+        }
+        .product-img {
+            height: 220px;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        .product-card:hover .product-img {
+            transform: scale(1.08);
+        }
+
+        /* Category Cards */
+        .category-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            background: #ffffff;
+        }
+        .category-img {
+            height: 140px;
+            object-fit: cover;
+            transition: transform 0.5s ease, filter 0.5s ease;
+        }
+        .category-card:hover .category-img {
+            transform: scale(1.1);
+            filter: brightness(1.1);
+        }
+        .category-card h5 {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        /* Carousel */
+        .carousel-item {
+            height: 400px;
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .carousel-item img {
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.8);
+        }
+        .carousel-caption {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            margin-top:20px;
+            padding: 15px 30px;
+            border-radius: 12px;
+            text-align: center;
+            animation: fadeInUp 0.8s ease-out;
+        }
+        .carousel-caption h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            margin: 0;
+        }
+        .carousel-caption a {
+            display: inline-block;
+            margin-top: 10px;
+            background: var(--accent);
+            color: var(--dark);
+            padding: 8px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+        .carousel-caption a:hover {
+            background: #d6c94e;
+            transform: scale(1.05);
+        }
+
+        /* Slider for Mobile Categories */
+        .slider-container {
+            overflow: hidden;
+            position: relative;
+        }
+        .slider {
+            display: flex;
+            transition: transform 0.8s ease;
+        }
+        .slider-item {
+            flex: 0 0 50%;
+            padding: 0 10px;
+        }
+
+        .promo-sections {
+            position: relative;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #fff;
+            border-radius: 16px;
+            margin: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        .promo-sections h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            font-weight: 700;
+            text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+        .promo-sections::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, rgba(47, 133, 90, 0.4), rgba(47, 133, 90, 0.8));
+            border-radius: 16px;
+        }
+
+        /* Promotional Section */
+        .promo-section {
+            position: relative;
+            background: url('{{ asset('images/farm-background.jpg') }}') no-repeat center center;
+            background-size: cover;
+            height: 450px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #fff;
+            border-radius: 16px;
+            margin: 5rem 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        .promo-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, rgba(47, 133, 90, 0.4), rgba(47, 133, 90, 0.8));
+            border-radius: 16px;
+        }
+        .promo-section h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            font-weight: 700;
+            text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+        .promo-section p {
+            font-size: 1.3rem;
+            z-index: 1;
+            margin: 1rem 0;
+        }
+        .promo-section a {
+            background: var(--secondary);
+            color: #fff;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-decoration: none;
+            z-index: 1;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .promo-section a:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Badges */
+        .badge-organic {
+            background: var(--primary);
+            color: #fff;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+        .badge-sale {
+            background: var(--secondary);
+            color: #fff;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+        .stock-low {
+            background: var(--secondary);
+            color: white;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .carousel-item {
+                height: 300px;
+            }
+            .carousel-caption h3 {
+                font-size: 1.5rem;
+            }
+            .promo-section {
+                height: 350px;
+            }
+            .promo-section h1 {
+                font-size: 2rem;
+            }
+            .promo-section p {
+                font-size: 1.1rem;
+            }
+            .product-img {
+                height: 180px;
+            }
+             /* Hot Deals Section */
+            .hot-deals-container {
+                max-width: 100%;
+            }
+            .hot-deals-container h2 {
+                font-size: 1.8rem;
+                margin-bottom: 1.5rem;
+            }
+            .hot-deals-slider {
+                width: 300% !important; /* Ensure 3 items take full width */
+            }
+            .hot-deal-item {
+                width: 100% !important; /* Show one item at a time */
+            }
+            .hot-deals-slider {
+                transform: translateX(-${active * 100}%); /* Adjust transform for single item view */
+            }
+            .hot-deal-item .relative {
+                height: 200px !important;
+            }
+            .hot-deal-item img {
+                height: 100%;
+            }
+            .hot-deal-item h5 {
+                font-size: 1rem;
+            }
+            .hot-deal-item .price {
+                font-size: 0.9rem;
+            }
+            .hot-deal-item .absolute.top-2 {
+                font-size: 0.8rem;
+                padding: 4px 8px;
+            }
+            .hot-deals-container .flex.justify-center {
+                margin-top: 1rem;
+            }
+            .hot-deals-container .w-3 {
+                width: 8px;
+                height: 8px;
+            }
+            .hot-deals-container .w-6 {
+                width: 20px;
+            }
+            
+        }
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 3rem 0;
+                text-align: center;
+            }
+            .hero-title {
+                font-size: 2rem;
+            }
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+            .carousel-item {
+                height: 250px;
+            }
+        }
+        .hot-deals-container {
+        perspective: 1000px;
+        }
+        .hot-deal-item {
+            transition: transform 0.5s ease, opacity 0.5s ease, z-index 0.5s ease;
+        }
+        .hot-deal-item.scale-110 {
+            transform: scale(1.1) translateY(-10px);
+            z-index: 10;
+            opacity: 1;
+        }
+        .hot-deal-item:not(.scale-110) {
+            filter: brightness(0.9);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+    @if(session('error'))
+    <div class="alert alert-warning alert-dismissible fade show" role="alert" id="autoDismissAlert" data-aos="fade-down">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <script>
+        setTimeout(() => {
+            const alert = bootstrap.Alert.getOrCreateInstance('#autoDismissAlert');
+            alert.close();
+        }, 5000);
+    </script>
+    @endif
+
+    <!-- Navigation Components -->
+    <x-uppernav/>
+    <x-loginmodal/>
+    <x-signupmodal/>
+    <x-middlenav/>
+    <x-lowernav/>
+    <x-sidebar/>
+
+    <!-- Main Content -->
+    <div class="container my-6">
+        <div class="row g-4">
+            <!-- Carousel -->
+            <div class="col-lg-6 mb-4" data-aos="fade-up">
+                
+                <div id="carouselExample" class="carousel slide shadow-lg rounded-3 overflow-hidden" data-bs-ride="carousel" data-bs-interval="3000">
+                    <div class="carousel-inner">
+                        <div class="carousel-item active">
+                            <img src="{{ asset('images/chono.jpg') }}" class="d-block w-100" alt="Shop Now">
+                            <div class="carousel-caption" data-aos="zoom-in">
+                                <h3>Shop now in our site</h3>
+                                <a href="#">Explore Now</a>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="{{ asset('images/hina.jpg') }}" class="d-block w-100" alt="Fresh Vegetables">
+                            <div class="carousel-caption" data-aos="zoom-in">
+                                <h3>Fresh Vegetable is here</h3>
+                                <a href="#">Shop Now</a>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="{{ asset('images/anime.jpg') }}" class="d-block w-100" alt="Sign Up">
+                            <div class="carousel-caption" data-aos="zoom-in">
+                                <h3>Sign up now</h3>
+                                <a href="#">Join Today</a>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    </button>
+                </div>
+
+                <!-- Featured Products -->
+                <div class="row mt-4 g-3">
+                    <div class="col-6" data-aos="fade-up" data-aos-delay="100">
+                        <div class="card product-card h-100 border-0">
+                            <img src="{{ asset('images/hina.jpg') }}" class="card-img-top product-img" alt="Organic Tomatoes">
+                            <div class="card-body">
+                                <h5 class="card-title">Organic Tomatoes</h5>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-2f855a">$4.99/kg</span>
+                                    <button class="btn btn-sm btn-outline-primary rounded-pill">Add</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6" data-aos="fade-up" data-aos-delay="200">
+                        <div class="card product-card h-100 border-0">
+                            <img src="{{ asset('images/hina.jpg') }}" class="card-img-top product-img" alt="Fresh Spinach">
+                            <div class="card-body">
+                                <h5 class="card-title">Fresh Spinach</h5>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-2f855a">$2.99/bunch</span>
+                                    <button class="btn btn-sm btn-outline-primary rounded-pill">Add</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Categories -->
+            <div class="col-lg-6 " data-aos="fade-up">
+                
+                
+                <div class="container" style="margin-top: 0.5 rem;">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card position-relative overflow-hidden border-0 rounded-4" data-aos="fade-up" style="height: 100px;">
+                                <a href="#" class="position-relative d-block h-100">
+                                    <!-- Image -->
+                                    <img src="{{ asset('images/ds.png') }}" class="card-img object-fit-cover w-100 h-100" alt="Discounted Items" style="object-fit: cover;">
+
+                                    <!-- Dark overlay -->
+                                    <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50" style="z-index: 1;"></div>
+
+                                    <!-- Centered text -->
+                                    <div class="position-absolute top-50 start-50 translate-middle text-center text-white px-4 py-2 rounded-pill bg-yellow-400 bg-opacity-75" style="text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6); z-index: 2;">
+                                    <a href="#">
+                                        <h3 class="fw-bold mb-0 fs-3 ">
+                                            Discounted Items 🔥
+                                        </h3>
+                                    </a>   
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Desktop View (3 per row) -->
+                <div class="row g-3 d-none d-md-flex mt-2 border-b-2 border-green-400">
+                    @foreach(['DISCOUNT', 'DISCOUNT', 'DISCOUNT'] as $index => $category)
+                        <div class="col-4" data-aos="fade-up" data-aos-delay="{{ $index * 100 }}">
+                            <a href="#" class="category-card h-100">
+                                <img src="{{ asset('images/hina.jpg') }}" class="img-fluid category-img " alt="{{ $category }}" style="height:200px;">
+                                <div class="p-3 text-center"><h5>{{ $category }}</h5></div>
+                            </a>
+                        </div>
+                    @endforeach
+                </div>
+
+                <!-- Mobile View (Slider with manual scroll) -->
+                <div class="d-md-none">
+                    <div class="slider-container overflow-auto" style="white-space: nowrap; scroll-snap-type: x mandatory;">
+                        @foreach(['DISCOUNT', 'DISCOUNT', 'DISCOUNT'] as $index => $category)
+                            <div class="slider-item d-inline-block" style="width: 50%; scroll-snap-align: start;" data-aos="fade-right" data-aos-delay="{{ $index * 100 }}">
+                                <a href="#" class="category-card h-100">
+                                    <img src="{{ asset('images/hina.jpg') }}" class="img-fluid category-img" alt="{{ $category }}">
+                                    <div class="p-3 text-center"><h5>{{ $category }}</h5></div>
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+                
+                <!-- Hot Deals Section -->
+                <div class="mt-2 py-4 bg-red-500 rounded-xl d-none d-md-block" 
+                style="background-image: url('{{ asset('images/das1.png') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;"
+                data-aos="fade-up">
+                    <div class="container mx-auto px-4">
+                        <h2 class="text-center mb-8 text-3xl font-bold text-white" data-aos="fade-up">🔥 Hot Deals</h2>
+
+                        <div class="hot-deals-container relative max-w-4xl mx-auto"
+                            x-data="{ active: 0, deals: 3 }"
+                            x-init="
+                                setInterval(() => {
+                                    active = (active + 1) % deals;
+                                }, 4000);
+                            ">
+                            
+                            <!-- Slider Container -->
+                            <div class="relative overflow-hidden h-64">
+                                <div class="hot-deals-slider flex transition-transform duration-700 ease-in-out"
+                                    :style="`transform: translateX(-${active * (40 / deals)}%); width: ${deals * 40}%`">
+                                    
+                                    <!-- Deal Items -->
+                                    <template x-for="(deal, index) in [
+                                        { img: '{{ asset('images/hina.jpg') }}', name: 'Fresh Cucumbers', price: '$1.99/kg', discount: '-20% OFF' },
+                                        { img: '{{ asset('images/hina.jpg') }}', name: 'Red Peppers', price: '$2.49/kg', discount: '-15% OFF' },
+                                        { img: '{{ asset('images/hina.jpg') }}', name: 'Organic Broccoli', price: '$3.29/kg', discount: '-25% OFF' }
+                                    ]" :key="index">
+                                        <div class="w-1/3 px-4 flex-shrink-0 transition-all duration-500 ease-in-out transform"
+                                            :class="{ 
+                                                'scale-110 z-10': active === index, 
+                                                'scale-90 opacity-70': active !== index 
+                                            }">
+                                            <div class="relative w-full h-full rounded-xl overflow-hidden shadow-2xl border-4 border-white">
+                                                <img class="w-full h-full object-cover object-center"
+                                                    :src="deal.img"
+                                                    :alt="deal.name">
+                                                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                                                    <h5 class="font-bold text-white text-lg" x-text="deal.name"></h5>
+                                                    <div class="price text-green-300 font-bold" x-text="deal.price"></div>
+                                                </div>
+                                                <div x-show="active === index" class="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                                                    <span x-text="deal.discount"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Indicators -->
+                            <div class="flex justify-center mt-6 space-x-2">
+                                <template x-for="i in deals">
+                                    <button class="w-3 h-3 rounded-full transition-all transform hover:scale-125"
+                                            :class="{ 'bg-green-600 w-6': active === i-1, 'bg-gray-300': active !== i-1 }"
+                                            @click="active = i-1"></button>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Hot Deals Section -->
+                <div class="mt-2 py-4 bg-red-500 rounded-xl d-block d-md-none" 
+                style="background-image: url('{{ asset('images/das1.png') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;"
+                data-aos="fade-up">
+                    <div class="container mx-auto px-4">
+                        <h2 class="text-center mb-8 text-3xl font-bold text-white" data-aos="fade-up">🔥 Hot Deals</h2>
+
+                        <div class="hot-deals-container relative max-w-4xl mx-auto"
+                            x-data="{ active: 0, deals: 3 }"
+                            x-init="
+                                setInterval(() => {
+                                    active = (active + 1) % deals;
+                                }, 4000);
+                            ">
+                            
+                            <!-- Slider Container -->
+                            <div class="relative overflow-hidden h-64">
+                                <div class="hot-deals-slider flex transition-transform duration-700 ease-in-out"
+                                    :style="`transform: translateX(-${active * (100 / deals)}%); width: ${deals * 100}%`">
+                                    
+                                    <!-- Deal Items -->
+                                    <template x-for="(deal, index) in [
+                                        { img: '{{ asset('images/hina.jpg') }}', name: 'Fresh Cucumbers', price: '$1.99/kg', discount: '-20% OFF' },
+                                        { img: '{{ asset('images/hina.jpg') }}', name: 'Red Peppers', price: '$2.49/kg', discount: '-15% OFF' },
+                                        { img: '{{ asset('images/hina.jpg') }}', name: 'Organic Broccoli', price: '$3.29/kg', discount: '-25% OFF' }
+                                    ]" :key="index">
+                                        <div class="w-1/3 px-4 flex-shrink-0 transition-all duration-500 ease-in-out transform"
+                                            :class="{ 
+                                                'scale-110 z-10': active === index, 
+                                                'scale-90 opacity-70': active !== index 
+                                            }">
+                                            <div class="relative w-full h-full rounded-xl overflow-hidden shadow-2xl border-4 border-white">
+                                                <img class="w-full h-full object-cover object-center"
+                                                    :src="deal.img"
+                                                    :alt="deal.name">
+                                                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                                                    <h5 class="font-bold text-white text-lg" x-text="deal.name"></h5>
+                                                    <div class="price text-green-300 font-bold" x-text="deal.price"></div>
+                                                </div>
+                                                <div x-show="active === index" class="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                                                    <span x-text="deal.discount"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Indicators -->
+                            <div class="flex justify-center mt-6 space-x-2">
+                                <template x-for="i in deals">
+                                    <button class="w-3 h-3 rounded-full transition-all transform hover:scale-125"
+                                            :class="{ 'bg-green-600 w-6': active === i-1, 'bg-gray-300': active !== i-1 }"
+                                            @click="active = i-1"></button>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Fresh Picks Section -->
+    <div class="container my-6">
+        <div class="promo-sections" data-aos="fade-up">
+            <h1>FRESH PICKS</h1>
+            
+        </div>
+        <div class="row g-4">
+            @foreach([
+                ['name' => 'Organic Tomatoes', 'price' => '$3.99/kg', 'image' => 'tomato.jpg', 'badge' => 'Organic'],
+                ['name' => 'Fresh Eggplants', 'price' => '$2.49/kg', 'image' => 'eggplant.jpg', 'badge' => 'Sale'],
+                ['name' => 'Organic Carrots', 'price' => '$2.99/kg', 'image' => 'carrot.jpg'],
+                ['name' => 'Fresh Spinach', 'price' => '$1.99/bunch', 'image' => 'spinach.jpg', 'badge' => 'Low Stock']
+            ] as $index => $product)
+                <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="{{ $index * 100 }}">
+                    <div class="card product-card h-100 border-0">
+                        <div class="position-relative">
+                            @if(isset($product['badge']))
+                                <span class="badge stock-low position-absolute top-0 end-0 m-2 {{ $product['badge'] === 'Organic' ? 'badge-organic' : ($product['badge'] === 'Sale' ? 'badge-sale' : '') }}">{{ $product['badge'] }}</span>
+                            @endif
+                            <img src="{{ asset('images/chono.jpg') }}" class="card-img-top product-img" alt="{{ $product['name'] }}"    >
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ $product['name'] }}</h5>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-2f855a">{{ $product['price'] }}</span>
+                                <button class="btn btn-sm btn-outline-primary rounded-pill">Add</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+
+    <!-- Promotional Section -->
+    <div class="container">
+        <div class="promo-section" data-aos="fade-up">
+            <h1>From Farm to Table</h1>
+            <p>Discover the freshest organic produce, sustainably sourced.</p>
+            <a href="#">Shop Fresh</a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <x-footernav/>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+    <script>
+        // Initialize AOS animations
+        AOS.init({
+            duration: 800,
+            once: true
+        });
+
+        // Dark Mode Toggle
+        const darkModeSwitch = document.getElementById('darkModeSwitch');
+        const darkModeSwitchMobile = document.getElementById('darkModeSwitchMobile');
+        const body = document.body;
+
+        function setDarkMode(enabled) {
+            if (enabled) {
+                body.classList.add('dark-mode');
+                localStorage.setItem('darkMode', 'enabled');
+                if (darkModeSwitch) darkModeSwitch.checked = true;
+                if (darkModeSwitchMobile) darkModeSwitchMobile.checked = true;
+            } else {
+                body.classList.remove('dark-mode');
+                localStorage.setItem('darkMode', 'disabled');
+                if (darkModeSwitch) darkModeSwitch.checked = false;
+                if (darkModeSwitchMobile) darkModeSwitchMobile.checked = false;
+            }
+        }
+
+        // Check for saved preference
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            setDarkMode(true);
+        }
+
+        // Event listeners
+        if (darkModeSwitch) {
+            darkModeSwitch.addEventListener('change', () => setDarkMode(darkModeSwitch.checked));
+        }
+        if (darkModeSwitchMobile) {
+            darkModeSwitchMobile.addEventListener('change', () => setDarkMode(darkModeSwitchMobile.checked));
+        }
+    </script>
+</body>
+</html>

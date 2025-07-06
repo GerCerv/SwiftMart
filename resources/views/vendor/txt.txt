@@ -1,0 +1,10 @@
+<!-- @php
+                                        $declinedItem = $order->items->first(fn($item) => $item->declinedOrderItem);
+                                    @endphp
+                                    @if($declinedItem)
+                                        <span class="px-2 py-1 text-xs font-semibold rounded bg-red-100 text-red-800">
+                                            {{ $declinedItem->declinedOrderItem->reason }}
+                                        </span>
+                                    @else
+                                        <span class="text-gray-500">-</span>
+                                    @endif -->

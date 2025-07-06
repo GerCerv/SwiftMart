@@ -1,0 +1,408 @@
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light position-sticky top-0 shadow-sm" style="z-index: 1030;">
+    <div class="container-fluid d-flex align-items-center justify-content-between py-2">
+        <img src="{{ asset('images/logona.png') }}" alt="Logo" class="ms-4" style="height: 100px;">
+
+        <!-- Search Bar -->
+        <div class="search-container">
+            <div class="input-group">
+                <input type="text" class="form-control rounded-start" placeholder="Search Product">
+                <button class="btn btn-primary rounded-end">
+                    <i class="fa fa-search text-white"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Icons: Wishlist, Cart, Account (Hidden in Phone Mode) -->
+        <div class="d-none d-md-flex align-items-center gap-4 icon-container" style="margin-right:25px;">
+            <div class="wishlist-container">
+                <a href="#" 
+                   class="text-success text-decoration-none d-flex flex-column align-items-center icon-animate wishlist-trigger" 
+                   id="wishlistIcon">
+                    <i class="hello fa fa-heart fa-lg mb-1 {{ auth()->check() && auth()->user()->wishlist()->count() > 0 ? 'text-#198754-500' : '' }}"></i>
+                    <span class="d-none d-lg-inline" style="margin-top:10px;">Wish List</span>
+                    @auth
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            {{ auth()->user()->wishlist()->count() }}
+                            <span class="visually-hidden">Wishlist items</span>
+                        </span>
+                    @endauth
+                </a>
+
+                <!-- Pop-up Box for Wishlist -->
+                <div class="wishlist-popup position-absolute" 
+                     id="wishlistPopup" 
+                     style="top: 100%; right: 0; z-index: 1000;">
+                    <h6 class="text-center mb-2">Your Wishlist</h6>
+                    <div class="wishlist-items max-h-96 overflow-y-auto">
+                        @auth
+                            @if(auth()->user()->wishlist()->count() > 0)
+                                @foreach(auth()->user()->wishlist()->with('product')->get() as $item)
+                                    <div class="wishlist-item" data-wishlist-item="{{ $item->product_id }}">
+                                        <img src="{{ $item->product->image ? asset('storage/products/' . $item->product->image) : asset('images/emp.jpg') }}" 
+                                             alt="{{ $item->product->name }}" 
+                                             class="rounded border">
+                                        <div class="items">
+                                        <p class="product-name">{{ $item->product->name }}</p>
+                                        <p class="product-price">₱{{ number_format($item->product->price, 2) }}</p>
+                                        </div>
+                                        <button class="wishlist-remove-btn "
+                                                data-product-id="{{ $item->product_id }}"
+                                                title="Remove from Wishlist">
+                                            <i class="hi fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                @endforeach
+                            @else
+                                <div class="wishlist-item">
+                                 <img src="{{ asset('images/emp.jpg') }}" class="gap-4"></img>
+                                    <div class="items">
+                                            <p class="product-name">No wishlist</p>
+                                            
+                                    </div>
+                                </div>
+                                <div class="wishlist-item">
+                                 <img src="{{ asset('images/emp.jpg') }}" class="gap-4"></img>
+                                    <div class="items">
+                                            <p class="product-name">No wishlist</p>
+                                            
+                                    </div>
+                                </div>
+                                <div class="wishlist-item">
+                                 <img src="{{ asset('images/emp.jpg') }}" class="gap-4"></img>
+                                    <div class="items">
+                                            <p class="product-name">No wishlist</p>
+                                            
+                                    </div>
+                                </div>
+                                <div class="wishlist-item">
+                                 <img src="{{ asset('images/emp.jpg') }}" class="gap-4"></img>
+                                    <div class="items">
+                                            <p class="product-name">No wishlist</p>
+                                            
+                                    </div>
+                                </div>
+                                
+                            @endif
+                        @else
+                            <!-- Guest view - centered content with login trigger -->
+                            <div class="wishlist-guest-view p-4 d-flex flex-column align-items-center">
+                                <img src="{{ asset('images/emp.jpg') }}" 
+                                    class="guest-wishlist-image mb-3"
+                                    style="width: 120px; height: 120px; object-fit: contain;">
+                                
+                                <p class="text-muted text-center mb-3">
+                                    Please login to view your wishlist
+                                </p>
+                                
+                                <button class="btn btn-primary btn-sm w-75"
+                                        onclick="event.preventDefault();
+                                                new bootstrap.Modal(document.getElementById('loginModal')).show();">
+                                    <i class="fas fa-sign-in-alt me-2"></i> Login
+                                </button>
+                            </div>
+                            
+                        @endauth
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Cart with Hover Dropdown -->
+            <div class="cart-container">
+                <a href="#" class="text-success text-decoration-none d-flex flex-column align-items-center icon-animate cart-trigger">
+                    <i class="green fa fa-shopping-cart fa-lg mb-1"></i>
+                    <span class="d-none d-lg-inline" style="margin-top:10px;">Add Cart</span>
+                </a>
+
+                <!-- Pop-up Box -->
+                <div class="cart-popup p-3 shadow rounded bg-white position-absolute">
+                    <h6 class="text-center mb-2">Your Cart</h6>
+                    <div class="cart-items">
+                        <!-- Item 1 -->
+                        <div class="cart-item">
+                            <span class="delete-item">×</span>
+                            <img src="{{ asset('images/emp.jpg') }}" alt="Item 1" class="rounded border">
+                            <a href="#" class="buy-btn">Buy Now</a>
+                        </div>
+                        <!-- Item 2 -->
+                        <div class="cart-item">
+                            <span class="delete-item">×</span>
+                            <img src="{{ asset('images/emp.jpg') }}" alt="Item 2" class="rounded border">
+                            <a href="#" class="buy-btn">Buy Now</a>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Menu -->
+            <a href="#" class="text-success text-decoration-none d-flex flex-column align-items-center icon-animate" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="green fa fa-user fa-lg mb-1"></i>
+                @auth
+                    <span class="d-none d-lg-inline" style="margin-top:10px;">{{ Auth::user()->name ?? 'Account' }}</span>
+                @else
+                    <span class="d-none d-lg-inline" style="margin-top:10px;">Account</span>
+                @endauth
+            </a>
+
+            <!-- Dropdown Menu -->
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu" style="margin-top:-40px;">
+                @auth
+                    <li><a class="dropdown-item" href="{{ route('profile', Auth::user()->name) }}">Profile</a></li>
+                    <li>
+                        <form action="{{ route('logout') }}" method="POST" class="m-0">
+                            @csrf
+                            <button type="submit" class="dropdown-item">Logout</button>
+                        </form>
+                    </li>
+                @else
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Login</a></li>
+                @endauth
+            </ul>
+        </div>
+
+        <!-- Mobile Menu Button -->
+        <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</nav>
+
+<!-- JavaScript for Wishlist Popup -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle delayed hide for wishlist and cart popups
+    const wishlistIcon = document.querySelector('#wishlistIcon');
+    const wishlistPopup = document.querySelector('#wishlistPopup');
+    const cartTrigger = document.querySelector('.cart-trigger');
+    const cartPopup = document.querySelector('.cart-popup');
+    let hideTimeout;
+
+    function showPopup(popup, otherPopup) {
+        // Immediately close the other popup
+        clearTimeout(hideTimeout);
+        otherPopup.style.opacity = '0';
+        otherPopup.style.transform = 'translateX(-50%) scale(0.8)';
+        setTimeout(() => {
+            if (otherPopup.style.opacity === '0') {
+                otherPopup.style.display = 'none';
+            }
+        }); // Match the transition duration (0.3s)
+
+        // Show the current popup
+        popup.style.display = 'block';
+        popup.style.opacity = '1';
+        popup.style.transform = 'translateX(-50%) scale(1)';
+    }
+
+    function hidePopup(popup) {
+        hideTimeout = setTimeout(() => {
+            popup.style.opacity = '0';
+            popup.style.transform = 'translateX(-50%) scale(0.8)';
+            // Wait for the transition to finish before setting display: none
+            setTimeout(() => {
+                if (popup.style.opacity === '0') {
+                    popup.style.display = 'none';
+                }
+            }); // Match the transition duration (0.3s)
+        }, 300); // 2-second delay before starting to hide
+    }
+
+    // Wishlist popup hover handling
+    wishlistIcon.addEventListener('mouseenter', () => showPopup(wishlistPopup, cartPopup));
+    wishlistPopup.addEventListener('mouseenter', () => showPopup(wishlistPopup, cartPopup));
+    wishlistIcon.addEventListener('mouseleave', () => hidePopup(wishlistPopup));
+    wishlistPopup.addEventListener('mouseleave', () => hidePopup(wishlistPopup));
+
+    // Cart popup hover handling
+    cartTrigger.addEventListener('mouseenter', () => showPopup(cartPopup, wishlistPopup));
+    cartPopup.addEventListener('mouseenter', () => showPopup(cartPopup, wishlistPopup));
+    cartTrigger.addEventListener('mouseleave', () => hidePopup(cartPopup));
+    cartPopup.addEventListener('mouseleave', () => hidePopup(cartPopup));
+    // Wishlist remove functionality
+    document.querySelectorAll('.wishlist-remove-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const productId = this.getAttribute('data-product-id');
+            fetch(`/wishlist/remove/${productId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove item from popup
+                    document.querySelector(`[data-wishlist-item="${productId}"]`).remove();
+                    // Update badge count
+                    const badge = document.querySelector('#wishlistIcon .badge');
+                    const currentCount = parseInt(badge ? badge.textContent : 0) || 0;
+                    if (badge) {
+                        badge.textContent = currentCount - 1;
+                        if (currentCount - 1 === 0) {
+                            badge.remove();
+                            document.querySelector('#wishlistIcon i').classList.remove('text-red-500');
+                            document.querySelector('#wishlistPopup .wishlist-items').innerHTML = '<p class="text-center text-sm text-gray-500">Your wishlist is empty.</p>';
+                            
+                        }
+                    }
+                    // Update product card button in shop.blade.php
+                    const productBtn = document.querySelector(`.wishlist-btn[data-product-id="${productId}"]`);
+                    if (productBtn) {
+                        productBtn.classList.replace('text-red-500', 'text-gray-400');
+                        productBtn.querySelector('i').classList.replace('fas', 'far');
+                        productBtn.setAttribute('title', 'Add to Wishlist');
+                    }
+                    showToast(data.message, 'success');
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showToast('An error occurred. Please try again.', 'error');
+            });
+        });
+    });
+
+    // Sync wishlist additions from shop.blade.php
+    document.addEventListener('wishlist-updated', function(e) {
+        const { productId, action, countChange, product } = e.detail;
+        const wishlistPopup = document.querySelector('#wishlistPopup .wishlist-items');
+        const wishlistBadge = document.querySelector('#wishlistIcon .badge');
+        const wishlistIcon = document.querySelector('#wishlistIcon i');
+        
+        // Update the counter badge
+        updateWishlistCounter(countChange);
+        
+        if (action === 'added') {
+            // Add item to popup
+            addToWishlistPopup(product);
+        } else if (action === 'removed') {
+            // Remove item from popup
+            removeFromWishlistPopup(productId);
+        }
+    });
+
+    function updateWishlistCounter(change) {
+        const badge = document.querySelector('#wishlistIcon .badge');
+        const icon = document.querySelector('#wishlistIcon i');
+        
+        if (!badge && change > 0) {
+            // Create badge if it doesn't exist
+            const badgeHtml = `<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">1<span class="visually-hidden">Wishlist items</span></span>`;
+            document.querySelector('#wishlistIcon').insertAdjacentHTML('beforeend', badgeHtml);
+            icon.classList.add('text-red-500');
+        } else if (badge) {
+            const currentCount = parseInt(badge.textContent) || 0;
+            const newCount = currentCount + change;
+            
+            if (newCount <= 0) {
+                // Remove badge if count reaches 0
+                badge.remove();
+                icon.classList.remove('text-red-500');
+                // Show empty state
+                document.querySelector('#wishlistPopup .wishlist-items').innerHTML = `
+                    <div class="text-center py-4">
+                        <p class="text-gray-500">Your wishlist is empty</p>
+                    </div>`;
+            } else {
+                // Update count
+                badge.textContent = newCount;
+            }
+        }
+    }
+
+    function addToWishlistPopup(product) {
+        const wishlistItems = document.querySelector('#wishlistPopup .wishlist-items');
+        
+        // Check if already exists
+        if (document.querySelector(`[data-wishlist-item="${product.id}"]`)) return;
+        
+        // Create new item HTML
+        const itemHtml = `
+            <div class="wishlist-item" data-wishlist-item="${product.id}">
+                <img src="${product.image || '{{ asset('images/emp.jpg') }}'}" 
+                    alt="${product.name}" 
+                    class="rounded border">
+                <div class="items">
+                    <p class="product-name">${product.name}</p>
+                    <p class="product-price">₱${product.price.toFixed(2)}</p>
+                </div>
+                <button class="wishlist-remove-btn"
+                        data-product-id="${product.id}"
+                        title="Remove from Wishlist">
+                    <i class="hi fas fa-trash"></i>
+                </button>
+            </div>`;
+        
+        // If empty, replace the placeholder, otherwise prepend
+        if (wishlistItems.querySelector('.text-gray-500')) {
+            wishlistItems.innerHTML = itemHtml;
+        } else {
+            wishlistItems.insertAdjacentHTML('afterbegin', itemHtml);
+        }
+        
+        // Add event listener to the new remove button
+        const removeBtn = wishlistItems.querySelector(`.wishlist-remove-btn[data-product-id="${product.id}"]`);
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                fetch(`/wishlist/remove/${product.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remove item from popup
+                        this.closest(`[data-wishlist-item="${product.id}"]`).remove();
+                        
+                        // Update counter
+                        const event = new CustomEvent('wishlist-updated', {
+                            detail: { 
+                                productId: product.id, 
+                                action: 'removed',
+                                countChange: -1
+                            }
+                        });
+                        document.dispatchEvent(event);
+                        
+                        // Update product card button
+                        const productBtn = document.querySelector(`.wishlist-btn[data-product-id="${product.id}"]`);
+                        if (productBtn) {
+                            productBtn.classList.replace('text-red-500', 'text-gray-400');
+                            productBtn.querySelector('i').classList.replace('fas', 'far');
+                            productBtn.setAttribute('title', 'Add to Wishlist');
+                        }
+                        
+                        showToast(data.message, 'success');
+                    }
+                });
+            });
+        }
+    }
+
+    function removeFromWishlistPopup(productId) {
+        const item = document.querySelector(`[data-wishlist-item="${productId}"]`);
+        if (item) {
+            item.remove();
+            
+            // If no items left, show empty state
+            if (document.querySelectorAll('#wishlistPopup .wishlist-item').length === 0) {
+                document.querySelector('#wishlistPopup .wishlist-items').innerHTML = `
+                    <div class="text-center py-4">
+                        <p class="text-gray-500">Your wishlist is empty</p>
+                    </div>`;
+            }
+        }
+    }
+});
+</script>
+<!-- MY REAL CODE  -->

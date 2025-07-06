@@ -1,0 +1,81 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Wishlist;
+use App\Models\Product;
+use App\Models\Vendor;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class WishlistController extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware('auth'); // Ensure user is authenticated
+    }
+
+    // View user's wishlist
+    public function index()
+    {
+        $wishlistItems = Auth::user()->wishlist()->with('product.vendor')->get();
+        return view('wishlist.index', compact('wishlistItems'));
+    }
+
+    // Add product to wishlist
+    public function add(Request $request, $productId)
+{
+    $product = Product::findOrFail($productId);
+
+    if (Auth::user()->hasInWishlist($productId)) {
+        return response()->json([
+            'success' => false, 
+            'message' => 'Product is already in your wishlist.'], 
+            400);
+    }
+
+    Wishlist::create([
+        'user_id' => Auth::id(),
+        'product_id' => $productId,
+    ]);
+
+    return response()->json([
+        'success' => true, 
+        'message' => 'Product added to wishlist.',
+        'product' => [
+            'id' => $product->id,
+            'name' => $product->name,
+            'price' => $product->price,
+            'image' => $product->image ? asset('storage/products/' . $product->image) : asset('images/emp.jpg')
+        ]
+    ]);
+}
+
+public function remove($productId)
+{
+    $wishlistItem = Wishlist::where('user_id', Auth::id())->where('product_id', $productId)->firstOrFail();
+    $wishlistItem->delete();
+
+    return response()->json(['success' => true, 'message' => 'Product removed from wishlist.']);
+}
+
+
+// Fetch user's wishlist for dynamic loading
+// public function fetch(Request $request)
+// {
+//     $wishlistItems = Auth::user()->wishlist()->with('product')->get()->map(function ($item) {
+//         return [
+//             'product_id' => $item->product_id,
+//             'name' => $item->product->name,
+//             'price' => $item->product->price,
+//             'image' => $item->product->image ? asset('storage/products/' . $item->product->image) : asset('images/emp.jpg'),
+//         ];
+//     });
+
+//     return response()->json([
+//         'success' => true,
+//         'items' => $wishlistItems,
+//         'count' => $wishlistItems->count(),
+//     ]);
+// }
+}

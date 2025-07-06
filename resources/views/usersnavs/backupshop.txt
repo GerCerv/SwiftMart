@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Shop</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <style>
+        .product-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .stock-low {
+            color: #ef4444;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8 text-center">Our Products</h1>
+        
+        @if($products->isEmpty())
+            <div class="text-center py-12">
+                <p class="text-gray-500 text-lg">No products available at the moment.</p>
+            </div>
+        @else
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                @foreach($products as $product)
+                <div class="product-card bg-white rounded-lg overflow-hidden shadow-md relative">
+                    <!-- Status Badge -->
+                    <span class="absolute top-2 left-2 text-xs px-2 py-1 rounded-full {{ $product->status_badge }}">
+                        {{ str_replace('_', ' ', ucfirst($product->status)) }}
+                    </span>
+                    
+                    <!-- Product Image -->
+                    <div 
+                        x-data="{
+                            images: [
+                                @if($product->image) '{{ asset('storage/products/' . $product->image) }}', @endif
+                                @if($product->image2) '{{ asset('storage/products/' . $product->image2) }}', @endif
+                                @if($product->image3) '{{ asset('storage/products/' . $product->image3) }}', @endif
+                                @if($product->image4) '{{ asset('storage/products/' . $product->image4) }}', @endif
+                                @if($product->image5) '{{ asset('storage/products/' . $product->image5) }}' @endif
+                            ],
+                            active: 0,
+                            hover: false,
+                            interval: null,
+                            startCarousel() {
+                                if (this.images.length <= 1) return;
+                                this.hover = true;
+                                this.interval = setInterval(() => {
+                                    if (!this.hover) return;
+                                    this.active = (this.active + 1) % this.images.length;
+                                }, 1500);
+                            },
+                            stopCarousel() {
+                                this.hover = false;
+                                clearInterval(this.interval);
+                            }
+                        }"
+                        @mouseenter="startCarousel()"
+                        @mouseleave="stopCarousel()"
+                        class="h-48 bg-gray-200 flex items-center justify-center overflow-hidden"
+                    >
+                        <template x-if="images.length > 0">
+                            <img :src="images[active]" alt="{{ $product->name }}" class="w-full h-full object-cover transition-all duration-300">
+                        </template>
+                        <template x-if="images.length === 0">
+                            <i class="fas fa-image text-4xl text-gray-400"></i>
+                        </template>
+                    </div>
+                    
+                    <!-- Product Info -->
+                    <div class="p-4">
+                        <div class="flex justify-between items-start mb-1">
+                            <h3 class="font-semibold text-lg line-clamp-2 flex-1">{{ $product->name }}</h3>
+                            <span class="text-xs text-gray-500 ml-2">#{{ $product->product_code }}</span>
+                        </div>
+                        
+                        @if($product->vendor)
+                        <p class="text-sm text-gray-600 mb-2">Sold by: {{ $product->vendor->name }}</p>
+                        @endif
+                        
+                        <p class="text-sm text-gray-500 mb-3 line-clamp-2">{{ $product->description }}</p>
+                        
+                        <!-- Category and Stock -->
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                                {{ ucfirst($product->category) }}
+                            </span>
+                            <span class="text-sm {{ $product->stock < 10 ? 'stock-low' : 'text-gray-600' }}">
+                                Stock: {{ $product->stock }}
+                            </span>
+                        </div>
+                        
+                        <!-- Price -->
+                        <div class="flex items-center mb-3">
+                            <span class="text-red-500 font-bold text-xl">₱{{ number_format($product->price, 2) }}</span>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="flex justify-between">
+                            <!-- Wishlist Button -->
+                            <button class="wishlist-btn p-2 rounded-full hover:bg-gray-100 text-red-500"
+                                data-product-id="{{ $product->id }}">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                            
+                            <!-- Add to Cart Button -->
+                            <button class="add-to-cart-btn bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center"
+                                data-product-id="{{ $product->id }}"
+                                {{ $product->stock < 1 ? 'disabled' : '' }}>
+                                <i class="fas fa-shopping-cart mr-2"></i> Add
+                            </button>
+                            
+                            <!-- Buy Now Button -->
+                            <button class="buy-now-btn bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded flex items-center"
+                                data-product-id="{{ $product->id }}"
+                                {{ $product->stock < 1 ? 'disabled' : '' }}>
+                                <i class="fas fa-bolt mr-2"></i> Buy
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        @endif
+    </div>
+
+    <!-- JavaScript for interactive elements -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wishlist functionality
+            document.querySelectorAll('.wishlist-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const productId = this.getAttribute('data-product-id');
+                    this.classList.toggle('text-red-500');
+                    this.classList.toggle('text-gray-400');
+                    
+                    // Here you would typically make an AJAX call to your backend
+                    fetch(`/wishlist/${productId}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Content-Type': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.success) {
+                            const icon = this.querySelector('i');
+                            if(icon.classList.contains('fa-solid')) {
+                                icon.classList.replace('fa-solid', 'fa-regular');
+                            } else {
+                                icon.classList.replace('fa-regular', 'fa-solid');
+                            }
+                        }
+                    });
+                });
+            });
+
+            // Add to cart functionality
+            document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const productId = this.getAttribute('data-product-id');
+                    
+                    fetch(`/cart/${productId}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Content-Type': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.success) {
+                            alert('Product added to cart!');
+                        } else {
+                            alert('Failed to add to cart: ' + data.message);
+                        }
+                    });
+                });
+            });
+
+            // Buy now functionality
+            document.querySelectorAll('.buy-now-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const productId = this.getAttribute('data-product-id');
+                    window.location.href = `/checkout?product_id=${productId}`;
+                });
+            });
+        });
+    </script>
+</body>
+</html>

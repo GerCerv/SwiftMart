@@ -1,0 +1,479 @@
+@php
+    use Illuminate\Support\Facades\Auth;
+
+    $cartItems = Auth::user()->cart()->with('product.vendor')->get();
+@endphp
+    
+
+    <!-- MY WORKING CODE  -->
+    @if($cartItems->isEmpty())
+        <div class="bg-white rounded-lg shadow p-8 text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <h2 class="text-xl font-medium text-gray-700 mt-4">Your cart is empty</h2>
+            <p class="text-gray-500 mt-2">Start shopping to add items to your cart</p>
+            <a href="/products" class="mt-6 inline-block px-6 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors">
+                Browse Products
+            </a>
+        </div>
+    @else
+    <form id="cart-form" class="bg-white rounded-lg shadow overflow-hidden">
+        @csrf
+
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr class="text-left text-gray-600">
+                        <th class="px-6 py-4 w-12">
+                            <input type="checkbox" id="select-all" class="rounded text-orange-500 focus:ring-orange-500">
+                        </th>
+                        <th class="px-6 py-4 font-medium">Product</th>
+                        <th class="px-6 py-4 font-medium">Unit Price</th>
+                        <th class="px-6 py-4 font-medium">Quantity</th>
+                        <th class="px-6 py-4 font-medium">Discount</th>
+                        <th class="px-6 py-4 font-medium">Total Price</th>
+                        <th class="px-6 py-4 font-medium">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    @foreach($cartItems as $item)
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4">
+                                <input type="checkbox" class="select-item rounded text-orange-500 focus:ring-orange-500" 
+                                       data-id="{{ $item->product_id }}">
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center space-x-4">
+                                    <img src="{{ $item->product->image ? asset('storage/products/' . $item->product->image) : asset('images/emp.jpg') }}" 
+                                         class="w-20 h-20 object-cover rounded-lg border border-gray-200">
+                                    <div>
+                                        <div class="font-medium text-gray-900">{{ $item->product->name }}</div>
+                                        <div class="text-sm text-gray-500">Vendor: {{ $item->product->vendor->name ?? 'N/A' }}</div>
+                                        <div class="text-sm text-gray-500">Category: {{ $item->product->category }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-gray-900">
+                                ₱<span class="unit-price" data-id="{{ $item->product_id }}">{{ number_format($item->product->price, 2) }}</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center">
+                                    <button type="button" class="decrease px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded-l-md transition-colors" 
+                                            data-id="{{ $item->product_id }}">−</button>
+                                    <input type="text" class="w-12 text-center quantity border-t border-b border-gray-200 py-1" 
+                                           data-id="{{ $item->product_id }}" value="{{ $item->quantity }}">
+                                    <button type="button" class="increase px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded-r-md transition-colors" 
+                                            data-id="{{ $item->product_id }}">+</button>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-gray-900 font-medium">
+                            @if ($item->product->discount > 0)
+                                <span class="item-discount text-success text-green-900 bg-green-200 font-semibold rounded-full px-2 py-1" data-id="{{ $item->product_id }}">
+                                    {{ ($item->product->discount) }}% OFF
+                                </span>
+                            @else
+                            
+                                <span class="item-discount text-error text-red-800 bg-red-200 font-semibold rounded-full px-2 py-1" data-id="{{ $item->product_id }}">
+                                   No Discount
+                                </span>
+                            @endif
+                                
+                            </td>
+                            @if ($item->product->discount > 0)
+                            <td class="px-6 py-4 text-gray-900 font-medium">
+                                ₱<span class="item-total" data-id="{{ $item->product_id }}">
+                                    {{ number_format($item->product->price * ($item->product->discount/100) * $item->quantity , 2) }}
+                                </span>
+                            </td>
+                            @else
+                            <td class="px-6 py-4 text-gray-900 font-medium">
+                                ₱<span class="item-total" data-id="{{ $item->product_id }}">
+                                    {{ number_format($item->product->price * $item->quantity, 2) }}
+                                </span>
+                            </td>
+                            @endif
+                            
+
+                            <td class="px-6 py-4">
+                                <button type="button" class="delete-btn text-red-600 hover:text-red-800 transition-colors" 
+                                        data-id="{{ $item->product_id }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Cart Summary -->
+        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+            <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                <div class="flex items-center space-x-4">
+                    <input type="checkbox" id="select-all-bottom" class="rounded text-orange-500 focus:ring-orange-500">
+                    <label for="select-all-bottom" class="text-gray-700">Select All</label>
+                    <button type="button" class="delete-selected text-red-600 hover:text-red-800 transition-colors flex items-center space-x-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        <span>Delete Selected</span>
+                    </button>
+                </div>
+                
+                
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-gray-600">Subtotal:</span>
+                        <span class="font-medium">₱<span id="subtotal-price">0.00</span></span>
+                    </div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-gray-600">Shipping:</span>
+                        <span class="font-medium">₱<span id="shipping-fee">0.00</span></span>
+                    </div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-lg font-semibold">Total:</span>
+                        <span class="text-xl font-bold text-orange-600">₱<span id="total-price">0.00</span></span>
+                    </div>
+                    
+                    <button type="submit" class="checkout-button">
+                        Proceed to Checkout
+                    </button>
+                
+            </div>
+        </div>
+    </form>
+    @endif
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const checkboxes = document.querySelectorAll(".select-item");
+        const selectAll = document.getElementById("select-all");
+        const selectAllBottom = document.getElementById("select-all-bottom");
+        const subtotalDisplay = document.getElementById("subtotal-price");
+        const shippingDisplay = document.getElementById("shipping-fee");
+        const totalPriceDisplay = document.getElementById("total-price");
+        const shippingFee = 50.00; // Fixed shipping fee for demo
+
+        function calculateTotals() {
+            let subtotal = 0;
+            let selectedCount = 0;
+            
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    const row = checkbox.closest("tr");
+                    const priceText = row.querySelector(".item-total").textContent;
+                    const price = parseFloat(priceText.replace(/[₱,]/g, ""));
+                    subtotal += price;
+                    selectedCount++;
+                }
+            });
+            
+            // Calculate shipping (free shipping for orders over 1000)
+            const shipping = selectedCount > 0 ? (subtotal >= 1000 ? 0 : shippingFee) : 0;
+            const total = subtotal + shipping;
+            
+            subtotalDisplay.textContent = subtotal.toFixed(2);
+            shippingDisplay.textContent = shipping.toFixed(2);
+            totalPriceDisplay.textContent = total.toFixed(2);
+            
+            // Update shipping note
+            const shippingNote = document.getElementById("shipping-note");
+            if (shippingNote) {
+                shippingNote.textContent = subtotal >= 1000 ? "Free Shipping" : "Standard Shipping";
+            }
+        }
+
+        // Select All functionality
+        function toggleSelectAll(checked) {
+            checkboxes.forEach(cb => cb.checked = checked);
+            selectAll.checked = checked;
+            selectAllBottom.checked = checked;
+            calculateTotals();
+        }
+
+        selectAll.addEventListener("change", () => toggleSelectAll(selectAll.checked));
+        selectAllBottom.addEventListener("change", () => toggleSelectAll(selectAllBottom.checked));
+
+        // Individual checkbox changes
+        checkboxes.forEach(cb => cb.addEventListener("change", () => {
+            const allChecked = [...checkboxes].every(cb => cb.checked);
+            selectAll.checked = allChecked;
+            selectAllBottom.checked = allChecked;
+            calculateTotals();
+        }));
+
+        // Quantity controls
+        function setupQuantityControls() {
+            document.querySelectorAll(".increase").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const id = btn.dataset.id;
+                    const qtyInput = document.querySelector(`.quantity[data-id="${id}"]`);
+                    qtyInput.value = parseInt(qtyInput.value) + 1;
+                    updateQuantity(id, qtyInput.value);
+                });
+            });
+
+            document.querySelectorAll(".decrease").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const id = btn.dataset.id;
+                    const qtyInput = document.querySelector(`.quantity[data-id="${id}"]`);
+                    if (parseInt(qtyInput.value) > 1) {
+                        qtyInput.value = parseInt(qtyInput.value) - 1;
+                        updateQuantity(id, qtyInput.value);
+                    }
+                });
+            });
+
+            document.querySelectorAll(".quantity").forEach(input => {
+                input.addEventListener("change", () => {
+                    const id = input.dataset.id;
+                    if (parseInt(input.value) < 1) input.value = 1;
+                    updateQuantity(id, input.value);
+                });
+            });
+        }
+
+        //DELETED ITEMS THEN SAYS NO ITEM HERE
+        function checkIfCartIsEmpty() {
+            const tbody = document.querySelector("tbody");
+            const cartForm = document.getElementById("cart-form");
+            const cartSummary = document.querySelector(".bg-gray-50");
+
+            if (tbody.children.length === 0) {
+                cartForm.style.display = "none";
+
+                const emptyCartMessage = `
+                    <div class="bg-white rounded-lg shadow p-8 text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 
+                                0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <h2 class="text-xl font-medium text-gray-700 mt-4">Your cart is empty</h2>
+                        <p class="text-gray-500 mt-2">Start shopping to add items to your cart</p>
+                        <a href="/products" class="mt-6 inline-block px-6 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors">
+                            Browse Products
+                        </a>
+                    </div>
+                `;
+
+                cartForm.insertAdjacentHTML("afterend", emptyCartMessage);
+            }
+        }
+        
+        function updateQuantity(productId, quantity) {
+            fetch(`/cart/update-quantity/${productId}`, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                },
+                body: JSON.stringify({ quantity })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const unitPrice = parseFloat(document.querySelector(`.unit-price[data-id="${productId}"]`).textContent.replace(/[₱,]/g, ""));
+                    const newTotal = unitPrice * data.quantity;
+                    document.querySelector(`.item-total[data-id="${productId}"]`).textContent = newTotal.toFixed(2);
+                    calculateTotals();
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+
+
+
+
+
+        // Function to remove an item from the pop-up cart in middlenav
+        function removeFromCartPopup(productId) {
+            const item = document.querySelector(`#cartPopup .cart-items [data-cart-item="${productId}"]`);
+            if (item) {
+                item.remove();
+                // Update the cart badge
+                const badge = document.querySelector('#cartIcon .badge');
+                const currentCount = parseInt(badge ? badge.textContent : 0) || 0;
+                if (badge) {
+                    const newCount = currentCount - 1;
+                    badge.textContent = newCount;
+                    if (newCount <= 0) {
+                        badge.remove();
+                        document.querySelector('#cartIcon i').classList.remove('text-#198754-500');
+                    }
+                }
+                // Check if the pop-up cart is empty
+                const cartItemsContainer = document.querySelector('#cartPopup .cart-items');
+                const remainingItems = cartItemsContainer.querySelectorAll('.cart-item');
+                if (remainingItems.length === 0) {
+                    cartItemsContainer.innerHTML = `
+                        <div class="cart-item text-center p-4">
+                            <img src="{{ asset('images/vegetable-placeholder.jpg') }}" 
+                                 class="w-24 h-24 object-contain mx-auto mb-3">
+                            <p class="product-name text-gray-600 font-medium">Your cart is empty!</p>
+                            <p class="text-sm text-gray-500 mt-1">Explore our fresh vegetables to start shopping.</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // Delete functionality
+        function setupDeleteButtons() {
+            document.querySelectorAll(".delete-btn").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    if (!confirm("Are you sure you want to remove this item from your cart?")) return;
+                    
+                    const id = btn.dataset.id;
+                    fetch(`/cart/remove/${id}`, {
+                        method: "DELETE",
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            btn.closest("tr").remove();
+                            calculateTotals();
+                            //pop up remove
+                            removeFromCartPopup(id);
+                            // Show a toast notification
+                            
+                            showToast("Item removed from cart");
+
+                        }
+                    });
+                });
+            });
+
+            // Delete selected items
+            document.querySelector(".delete-selected").addEventListener("click", () => {
+                const selectedItems = [...checkboxes].filter(cb => cb.checked).map(cb => cb.dataset.id);
+                if (selectedItems.length === 0) {
+                    alert("Please select items to delete");
+                    return;
+                }
+                
+                if (!confirm(`Are you sure you want to remove ${selectedItems.length} item(s) from your cart?`)) return;
+                
+                Promise.all(selectedItems.map(id => 
+                    fetch(`/cart/remove/${id}`, {
+                        method: "DELETE",
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                        }
+                    })
+                ))
+                .then(responses => Promise.all(responses.map(res => res.json())))
+                .then(results => {
+                    if (results.every(r => r.success)) {
+                        selectedItems.forEach(id => {
+                            document.querySelector(`.delete-btn[data-id="${id}"]`)?.closest("tr")?.remove();
+                            removeFromCartPopup(id);
+                        });
+                        calculateTotals();
+                        showToast(`${selectedItems.length} items removed from cart`);
+
+                        checkIfCartIsEmpty();
+                    }
+                });
+            });
+        }
+
+        // Toast notification
+        function showToast(message) {
+            const toast = document.createElement("div");
+            toast.className = "fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg animate-fade-in";
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add("animate-fade-out");
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Initialize
+        setupQuantityControls();
+        setupDeleteButtons();
+        calculateTotals();
+    });
+</script>
+
+<style>
+    .checkout-button {
+        width: 25%;
+        padding: 12px 24px;
+        background-color: #f97316; /* Orange-500 */
+        color: white;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .checkout-button:hover {
+        background-color: #ea580c; /* Darker Orange-600 */
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .checkout-button:active {
+        background-color: #c2410c; /* Even Darker - Orange-700 */
+    }
+
+    .checkout-button:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.5); /* focus ring */
+    }
+
+
+    
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    .animate-fade-out {
+        animation: fadeOut 0.3s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes fadeOut {
+        from { opacity: 1; transform: translateY(0); }
+        to { opacity: 0; transform: translateY(10px); }
+    }
+    
+    input.quantity {
+        -moz-appearance: textfield;
+    }
+    
+    input.quantity::-webkit-outer-spin-button,
+    input.quantity::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+</style>

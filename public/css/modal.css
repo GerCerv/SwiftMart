@@ -1,0 +1,144 @@
+/* signup */
+/* Make the modal even wider */
+/* Rounded corners for the entire modal */
+.modal-content {
+  border-radius: 12px; /* Adjust as needed */
+  overflow: hidden; /* Ensures child elements don’t spill over rounded corners */
+}
+.modal-lg {
+    max-width: 1000px; /* Increase width */
+    width: 95%; /* Make it take more space */
+  }
+  
+  /* Modal Layout */
+  .modal-body {
+    display: flex;
+    align-items: stretch;
+    padding: 0;
+    height: 100%;
+    
+  }
+  
+  /* Left Side: Logo */
+  .left-side {
+    
+    width: 45%;
+    background-color: #198754; /* Green */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+  }
+  
+  .logo {
+    width: 250px;
+    border-radius: 32px; /* Adjust as needed */
+  overflow: hidden; /* Ensures child elements don’t spill over rounded corners */
+  }
+  
+  /* Right Side: Form */
+  .right-side {
+    
+    width: 55%;
+    background-color: #f8f9fa; /* Light Gray */
+    padding: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  /* Form Styling */
+  .form-control {
+    background: white;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    padding: 12px;
+  }
+  
+  /* Button */
+  button {
+    padding: 12px;
+    border-radius: 5px;
+  }
+
+
+
+/* LOGIN */
+.login-image {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #198754; /* Green */
+  padding: 40px;
+   
+}
+
+.login-image img {
+ width: 250px;
+  border-radius: 32px; /* Adjust as needed */
+  overflow: hidden; /* Ensures child elements don’t spill over rounded corners */
+}
+
+/* Right Side Form */
+.login-form {
+  flex: 1;
+  background-color: #f8f9fa; /* Light Gray */
+    padding: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  /* Mobile Responsive */
+  @media (max-width: 768px) {
+    .modal-lg {
+      max-width: 95%; /* Reduce modal width */
+      
+  
+    }
+    .modal-body {
+        flex-direction: column;
+        
+    }
+    .left-side, .right-side {
+        width: 100%;
+    }
+    .left-side {
+        padding: 20px;
+        
+    }
+    .right-side {
+        padding: 30px;
+        
+    }
+    .logo {
+      width: 180px;
+    }
+    
+    
+  }

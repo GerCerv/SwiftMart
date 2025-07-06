@@ -1,0 +1,205 @@
+/* Custom Collapse Animation */
+#categoriesSubmenu.collapse {
+  transition: height 0.3s ease;
+}
+#categoriesSubmenu {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+#categoriesSubmenu li {
+  padding-left: 20px; /* Optional: Adds spacing to the left of subcategory items */
+}
+#offcanvasNavbar {
+  width: 200px !important; 
+  background-color:rgba(255, 255, 255, 0.9);
+  }
+/* Burger Menu Animation */
+.navbar-toggler {
+    transition: transform 2.3s ease-in-out;
+  }
+  
+  .navbar-toggler.collapsed .navbar-toggler-icon {
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .navbar-toggler.collapsed .navbar-toggler-icon::before {
+    transform: rotate(0deg);
+  }
+  
+  .navbar-toggler:not(.collapsed) .navbar-toggler-icon::before {
+    transform: rotate(45deg);
+  }
+  
+  .navbar-toggler:not(.collapsed) .navbar-toggler-icon::after {
+    transform: rotate(-45deg);
+  }
+  
+  /* Transition effects for the offcanvas header */
+  .offcanvas-header {
+    transition: opacity 0.3s ease;
+  }
+  
+  .offcanvas.show .offcanvas-header {
+    opacity: 1;
+  }
+  /* Initial Hidden State */
+  .offcanvas .nav-item {
+    opacity: 0;
+    transform: translateX(-20px); /* Start slightly off-screen */
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  
+  /* On Sidebar Open - Animate Links */
+  .offcanvas.show .nav-item {
+    opacity: 1;
+    transform: translateX(0); /* Move to the normal position */
+  }
+  
+  /* Optional: Add hover effect for links */
+  .offcanvas .nav-item:hover {
+    transform: scale(1.1);
+    transition: transform 0.2s;
+  }
+  /* Basic Style for Links */
+  .offcanvas .nav-link {
+    position: relative;
+    color: #1b8a04;
+    padding-bottom: 5px; /* Extra padding to accommodate the line */
+    transition: color 0.3s ease; /* Smooth color change */
+  }
+  
+  /* Animated Underline Effect on Hover */
+  .offcanvas .nav-link::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background-color: #038b0f; /* Color of the line (can be changed) */
+    transform: scaleX(0); /* Initially scale the line to 0 */
+    transform-origin: bottom right;
+    transition: transform 0.3s ease-out;
+  }
+  
+  /* On Hover, Animate the Line */
+  .offcanvas .nav-link:hover::after {
+    transform: scaleX(1); /* Scale the line to 100% width */
+    transform-origin: bottom left;
+  }
+  
+  /* Optional: Change color of link on hover */
+  .offcanvas .nav-link:hover {
+  color: #1fbd00; /* Change text color when hovered */
+  }
+  /* Remove default link styles on click */
+.offcanvas .nav-link:focus, 
+.offcanvas .nav-link:active {
+    color: #12bb02;  /* Keep the original color or set a desired color */
+    text-decoration: none; /* Remove any underlining */
+}
+/* Custom Collapse Animation for Categories Submenu */
+#categoriesSubmenu.collapse {
+  transition: height 0.5s ease, opacity 0.5s ease;
+  height: 0;
+  opacity: 0;
+  overflow: hidden; /* Ensures the submenu is hidden when collapsed */
+}
+
+#categoriesSubmenu.show {
+  height: auto; /* Expands to fit content */
+  opacity: 1; /* Fully visible */
+}
+
+/* Smooth transition for submenu list items */
+#categoriesSubmenu li {
+  opacity: 0;
+  transform: translateY(-10px); /* Start slightly above */
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+#categoriesSubmenu.show li {
+  opacity: 1;
+  transform: translateY(0); /* Move to the original position */
+}
+
+/* Optional: Delay for list items to create cascading effect */
+#categoriesSubmenu li:nth-child(1) {
+  transition-delay: 0.1s;
+}
+#categoriesSubmenu li:nth-child(2) {
+  transition-delay: 0.2s;
+}
+#categoriesSubmenu li:nth-child(3) {
+  transition-delay: 0.3s;
+}
+#categoriesSubmenu li:nth-child(4) {
+  transition-delay: 0.4s;
+}
+#categoriesSubmenu li:nth-child(5) {
+  transition-delay: 0.5s;
+}
+
+/* Logout Button in Sidebar */
+.sidebar-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background-color: transparent;
+  border: none;
+  color: #198754;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 10px 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sidebar-logout-btn:hover {
+  color: #0f5e34;
+  transform: translateX(5px);
+}
+
+/* Optional: Consistent Login Styling */
+.sidebar-login-btn {
+  color: #198754;
+  font-weight: 600;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.sidebar-login-btn:hover {
+  color: #0f5e34;
+  transform: translateX(5px);
+}
+
+
+.welcome-heading {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 700;
+  color: #198754;
+  letter-spacing: 1px;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  animation: fadeInDown 0.5s ease-in-out;
+}
+
+/* Optional animation */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ACOUNT */

@@ -1,0 +1,218 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light position-sticky top-0 shadow-sm" style="z-index: 1030;">
+    <div class="container-fluid d-flex align-items-center justify-content-between py-2">
+
+        
+        <img src="{{ asset('images/logona.png') }}" alt="Logo" class="ms-4" style="height: 100px;">
+
+        <!-- Search Bar -->
+        <div class="search-container">
+            <div class="input-group">
+                <input type="text" class="form-control rounded-start" placeholder="Search Product">
+                <button class="btn btn-primary rounded-end">
+                    <i class="fa fa-search text-white"></i>
+                </button>
+            </div>
+        </div>
+
+        
+        
+
+        
+
+       <!-- Icons: Wishlist, Cart, Account (Hidden in Phone Mode) -->
+        <div class="d-none d-md-flex align-items-center gap-4 icon-container" style="margin-right:25px;">
+            <div class="position-relative">
+                <a href="#" class="text-success text-decoration-none d-flex flex-column align-items-center icon-animate" id="wishlistIcon">
+                    <i class="fa fa-heart fa-lg mb-1"></i>
+                    <span class="d-none d-lg-inline" style="margin-top:10px;">Wish List</span>
+                </a>
+
+                <!-- Pop-up Box for Wishlist -->
+                <div class="wishlist-popup p-2 shadow rounded bg-white position-absolute" id="wishlistPopup">
+                    <h6 class="text-center mb-2">Your Wishlist</h6>
+                    <div class="wishlist-items">
+                        <img src="{{ asset('images/emp.jpg') }}" alt="Item 1" class="rounded border">
+                        <img src="{{ asset('images/emp.jpg') }}" alt="Item 2" class="rounded border">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Cart with Hover Dropdown -->
+            <div class="position-relative">
+                <a href="#" class="text-success text-decoration-none d-flex flex-column align-items-center icon-animate cart-trigger">
+                    <i class="fa fa-shopping-cart fa-lg mb-1"></i>
+                    <span class="d-none d-lg-inline" style="margin-top:10px;">Add Cart</span>
+                </a>
+
+                <!-- Pop-up Box -->
+                <div class="cart-popup p-3 shadow rounded bg-white position-absolute">
+                    <h6 class="text-center mb-2">Your Cart</h6>
+                    
+                    <div class="cart-items">
+                        <!-- Item 1 -->
+                        <div class="cart-item">
+                            <span class="delete-item">&times;</span>
+                            <img src="{{ asset('images/emp.jpg') }}" alt="Item 1" class="rounded border">
+                            <a href="#" class="buy-btn">Buy Now</a>
+                        </div>
+
+                        <!-- Item 2 -->
+                        <div class="cart-item">
+                            <span class="delete-item">&times;</span>
+                            <img src="{{ asset('images/emp.jpg') }}" alt="Item 2" class="rounded border">
+                            <a href="#" class="buy-btn">Buy Now</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MIDDLE NAV -->
+            <a href="#" class="text-success text-decoration-none d-flex flex-column align-items-center icon-animate" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fa fa-user fa-lg mb-1"></i>
+
+                @auth
+                    <span class="d-none d-lg-inline" style="margin-top:10px;">{{ Auth::user()->name ?? 'Account' }}</span>
+                @else
+                    <span class="d-none d-lg-inline" style="margin-top:10px;">Account</span>
+                @endauth
+            </a>
+
+            <!-- Dropdown Menu -->
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu" style="margin-top:-40px;">
+                @auth
+                    <li><a class="dropdown-item" href="{{ route('profile', Auth::user()->name) }}">Profile</a></li> <!-- Add the link to the profile page -->
+                    <li>
+                        <form action="{{ route('logout') }}" method="POST" class="m-0">
+                            @csrf
+                            <button type="submit" class="dropdown-item">Logout</button>
+                        </form>
+                    </li>
+                @else
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Login</a></li>
+                @endauth
+            </ul>
+
+        </div>
+
+
+
+
+
+        <!-- Mobile Menu Button -->
+        <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+    </div>
+</nav>
+
+.custom-search .form-control {
+    border-radius: 25px;
+    box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.2);
+    transition: 0.3s;
+    
+    }
+    .custom-search .form-control:focus {
+      box-shadow: 0px 5px 8px rgba(255, 1, 1, 0.3);
+    }
+    .custom-search .btn {
+      border-radius: 25px;
+    }
+    
+    .input-group {
+      max-width: 1000px; /* Increase width */
+      width: 100%; /* Make it responsive */
+      
+    }
+    .form-control {
+      height: 55px; /* Increase height */
+      font-size: 16px; /* Bigger text */
+      
+    }
+    
+    .btn {
+      height: 55px;
+      width: 60px; /* Match button height */
+      font-size: 16px;
+    }
+    .d-flex.justify-content-center {
+      margin-bottom: 5px; /* Adjust as needed */
+    }
+
+
+
+    /* Icon Animations */
+.icon-animate {
+    transition: transform 0.3s ease, color 0.3s ease, opacity 0.3s;
+    position: relative;
+  }
+  
+  /* Hover Effect */
+  .icon-animate:hover {
+    transform: scale(1.2); /* Slightly enlarge icon */
+    color: #28a745; /* Change color to green */
+  }
+  
+  /* Hover Effect: Adds Bounce */
+  .icon-animate:hover i {
+    animation: bounce 0.5s ease-in-out;
+  }
+  
+  /* Fade-in Entrance Animation */
+  .icon-animate {
+    opacity: 0;
+    animation: fadeIn 0.5s ease-in-out forwards;
+  }
+
+  /* WISH LIST AND CART POP UP */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  /* Keyframes for Smooth Fade-In */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+  }
+  
+  /* Keyframes for Bounce Effect */
+  @keyframes bounce {
+    0% { transform: translateY(0); }
+    30% { transform: translateY(-5px); }
+    60% { transform: translateY(2px); }
+    100% { transform: translateY(0); }
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
+    .icon-container {
+        gap: 2rem; /* Adds more space between icons */
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .icon-container {
+        gap: 1rem; /* Slightly reduces space for smaller screens */
+    }
+  }

@@ -1,0 +1,925 @@
+function toggleSubmenu(id) {
+    const submenu = document.getElementById(id);
+    const chevron = document.getElementById(id.replace('submenu', 'chevron'));
+    submenu.classList.toggle('show');
+    chevron.classList.toggle('bi-chevron-down');
+    chevron.classList.toggle('bi-chevron-up');
+}
+
+function showView(viewName) {
+    document.querySelectorAll('.submenu-item, .menu-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    const clickedItem = document.querySelector(`[data-view="${viewName}"]`);
+    if (clickedItem) {
+        clickedItem.classList.add('active');
+    }
+
+    document.querySelectorAll('.content-view').forEach(view => {
+        view.classList.remove('active');
+        view.style.display = 'none';
+    });
+    const $view = document.getElementById(`${viewName}-view`);
+    $view.classList.add('active');
+    $view.style.display = 'block';
+
+    const encodedUserName = encodeURIComponent(window.currentUserName);
+    const newUrl = `/profile/${viewName}/${encodedUserName}`;
+    history.pushState({ view: viewName }, '', newUrl);
+
+    const $contentArea = $view.querySelector(`.${viewName}-content`);
+    const $spinner = $view.querySelector('.loading-spinner');
+    $spinner.style.display = 'block';
+    $contentArea.style.display = 'none';
+
+    $.ajax({
+        url: `/profile/tab/${viewName}`,
+        type: 'GET',
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        success: function(response) {
+            $contentArea.innerHTML = response;
+            $spinner.style.display = 'none';
+            $contentArea.style.display = 'block';
+            reinitializeComponents(viewName);
+        },
+        error: function(xhr) {
+            $spinner.style.display = 'none';
+            $contentArea.style.display = 'block';
+            showToast(`Error loading ${viewName} content`, 'error');
+        }
+    });
+}
+
+window.addEventListener('popstate', function(event) {
+    const viewName = event.state ? event.state.view : 'dashboard';
+    const $view = document.getElementById(`${viewName}-view`);
+    const $contentArea = $view.querySelector(`.${viewName}-content`);
+    const $spinner = $view.querySelector('.loading-spinner');
+
+    document.querySelectorAll('.submenu-item, .menu-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    const activeItem = document.querySelector(`[data-view="${viewName}"]`);
+    if (activeItem) {
+        activeItem.classList.add('active');
+    }
+
+    document.querySelectorAll('.content-view').forEach(view => {
+        view.classList.remove('active');
+        view.style.display = 'none';
+    });
+    $view.classList.add('active');
+    $view.style.display = 'block';
+
+    $spinner.style.display = 'block';
+    $contentArea.style.display = 'none';
+
+    $.ajax({
+        url: `/profile/tab/${viewName}`,
+        type: 'GET',
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        success: function(response) {
+            $contentArea.innerHTML = response;
+            $spinner.style.display = 'none';
+            $contentArea.style.display = 'block';
+            reinitializeComponents(viewName);
+        },
+        error: function(xhr) {
+            $spinner.style.display = 'none';
+            $contentArea.style.display = 'block';
+            showToast(`Error loading ${viewName} content`, 'error');
+        }
+    });
+
+    const encodedUserName = encodeURIComponent(window.currentUserName);
+    const newUrl = `/profile/${viewName}/${encodedUserName}`;
+    history.replaceState({ view: viewName }, '', newUrl);
+});
+
+function showToast(message, type = 'success') {
+    const toastEl = document.getElementById('liveToast');
+    if (!toastEl) return;
+
+    const toastBody = toastEl.querySelector('.toast-body');
+    toastBody.textContent = message;
+
+    if (type === 'error') {
+        toastBody.classList.remove('bg-green-500');
+        toastBody.classList.add('bg-red-500');
+    } else {
+        toastBody.classList.remove('bg-red-500');
+        toastBody.classList.add('bg-green-500');
+    }
+
+    const toast = new bootstrap.Toast(toastEl, { animation: true, autohide: true, delay: 3000 });
+    toast.show();
+}
+
+function reinitializeComponents(viewName) {
+    const $view = document.getElementById(`${viewName}-view`);
+
+    $($view).find('[data-bs-toggle="modal"]').off('click').on('click', function() {
+        const target = $(this).data('bs-target');
+        if (target) {
+            $(target).modal('show');
+        }
+    });
+    $($view).find('.dropdown-toggle').each(function() {
+        new bootstrap.Dropdown(this);
+    });
+    
+    if (viewName === 'wishlist') {
+        $($view).find('.wishlist-remove-btn').off('click').on('click', function(e) {
+            e.stopPropagation();
+            const productId = this.getAttribute('data-product-id');
+            const itemElement = $view.querySelector(`[data-wishlist-item="${productId}"]`);
+            if (itemElement) {
+                itemElement.remove();
+                showToast('Item removed from wishlist');
+            }
+
+            if ($view.querySelectorAll('.wishlist-item').length === 0) {
+                $view.querySelector('.wishlist-content').innerHTML = `
+                    <div class="text-center py-6">
+                        <img src="{{ asset('images/emp.jpg') }}" alt="Empty Wishlist" class="w-24 h-24 object-contain mx-auto mb-4">
+                        <p class="text-gray-600 font-medium">Your wishlist is empty!</p>
+                        <p class="text-sm text-gray-500 mt-2">Add some fresh products to your wishlist.</p>
+                        <a href="/products" class="mt-4 inline-block bg-[#729979] text-white font-semibold py-2 px-6 rounded-lg hover:bg-[#5e8064] transition">
+                            Explore Products
+                        </a>
+                    </div>
+                `;
+            }
+
+            $.ajax({
+                url: `/wishlist/remove/${productId}`,
+                type: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(data) {
+                    if (data.success) {
+                        showToast('Item removed from wishlist');
+                    } else {
+                        showToast(data.message || 'Failed to remove item', 'error');
+                    }
+                },
+                error: function(xhr) {
+                    showToast('Error removing item from wishlist', 'error');
+                }
+            });
+        });
+    }
+
+    if (viewName === 'cart') {
+        const checkboxes = $view.querySelectorAll(".select-item");
+        const selectAll = $view.querySelector("#select-all");
+        const selectAllBottom = $view.querySelector("#select-all-bottom");
+        const subtotalDisplay = $view.querySelector("#subtotal-price");
+        const shippingDisplay = $view.querySelector("#shipping-fee");
+        const totalPriceDisplay = $view.querySelector("#total-price");
+        const totalSavingsDisplay = $view.querySelector("#total-savings");
+        const shippingFee = 50.00;
+        const paymentMethodSelect = $view.querySelector('#payment_method');
+        if (paymentMethodSelect) {
+            paymentMethodSelect.addEventListener('change', function() {
+                const isSelfPickup = this.value === 'self_pickup';
+                
+                // Update shipping display
+                if (shippingDisplay) {
+                    shippingDisplay.textContent = isSelfPickup ? '0.00' : shippingFee.toFixed(2);
+                }
+                
+                // Recalculate totals
+                const totals = calculateTotals();
+                const total = isSelfPickup ? totals.subtotal : totals.total;
+                if (totalPriceDisplay) {
+                    totalPriceDisplay.textContent = total.toFixed(2);
+                }
+                
+                // Also update checkout modal totals if visible
+                if (checkoutModal && !checkoutModal.classList.contains('hidden')) {
+                    if (checkoutShipping) {
+                        checkoutShipping.textContent = isSelfPickup ? '0.00' : shippingFee.toFixed(2);
+                    }
+                    if (checkoutTotal) {
+                        checkoutTotal.textContent = isSelfPickup ? totals.subtotal.toFixed(2) : totals.total.toFixed(2);
+                    }
+                }
+            });
+        }
+        
+        function calculateTotals() {
+            let subtotal = 0;
+            let totalSavings = 0;
+            let selectedCount = 0;
+
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    const row = checkbox.closest("tr");
+                    
+                    const unitPrice = parseFloat(row.querySelector(".unit-price").textContent.replace(/[₱,]/g, ""));
+                    const quantity = parseInt(row.querySelector(".quantity").value);
+                    const discountText = row.querySelector(".item-discount").textContent;
+                    const discountPercentage = discountText.includes("No Discount")
+                        ? 0
+                        : parseFloat(discountText.match(/\d+(\.\d+)?/)[0]);
+                    const packSize = parseInt(row.querySelector(".pack-size-input").value) || 1;
+
+                    const originalTotal = unitPrice * quantity * packSize;
+                    const savings = discountPercentage > 0
+                        ? (discountPercentage / 100) * originalTotal
+                        : 0;
+                    const discountedTotal = originalTotal - savings;
+
+                    subtotal += discountedTotal;
+                    totalSavings += savings;
+                    selectedCount++;
+                }
+            });
+
+            const shipping = selectedCount > 0 ? (subtotal >= 1000 ? 0 : shippingFee) : 0;
+            const total = subtotal + shipping;
+
+            if (subtotalDisplay) subtotalDisplay.textContent = subtotal.toFixed(2);
+            if (shippingDisplay) shippingDisplay.textContent = shipping.toFixed(2);
+            if (totalPriceDisplay) totalPriceDisplay.textContent = total.toFixed(2);
+            if (totalSavingsDisplay) totalSavingsDisplay.textContent = totalSavings.toFixed(2);
+
+            return { subtotal, shipping, total, totalSavings, selectedCount };
+        }
+
+        function toggleSelectAll(checked) {
+            checkboxes.forEach(cb => cb.checked = checked);
+            if (selectAll) selectAll.checked = checked;
+            if (selectAllBottom) selectAllBottom.checked = checked;
+            calculateTotals();
+        }
+
+        if (selectAll) {
+            selectAll.addEventListener("change", () => toggleSelectAll(selectAll.checked));
+        }
+        if (selectAllBottom) {
+            selectAllBottom.addEventListener("change", () => toggleSelectAll(selectAllBottom.checked));
+        }
+
+        checkboxes.forEach(cb => cb.addEventListener("change", () => {
+            const allChecked = [...checkboxes].every(cb => cb.checked);
+            if (selectAll) selectAll.checked = allChecked;
+            if (selectAllBottom) selectAllBottom.checked = allChecked;
+            calculateTotals();
+        }));
+
+        function updateQuantity(productId, quantity) {
+            $.ajax({
+                url: `/cart/update-quantity/${productId}`,
+                type: "POST",
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'Content-Type': 'application/json'
+                },
+                data: JSON.stringify({ quantity }),
+                success: function(data) {
+                    if (data.success) {
+                        const unitPrice = parseFloat($view.querySelector(`.unit-price[data-id="${productId}"]`).textContent.replace(/[₱,]/g, ""));
+                        const discountText = $view.querySelector(`.item-discount[data-id="${productId}"]`).textContent;
+                        const discountPercentage = discountText.includes("No Discount")
+                            ? 0
+                            : parseFloat(discountText.match(/\d+(\.\d+)?/)[0]);
+                        const packSize = parseInt($view.querySelector(`.pack-size-input[data-id="${productId}"]`).value) || 1;
+                        const discountedUnitPrice = unitPrice * (1 - discountPercentage / 100);
+                        const newTotal = discountedUnitPrice * data.quantity * packSize;
+
+                        // Update all quantity inputs and totals for this productId
+                        $view.querySelectorAll(`.quantity[data-id="${productId}"]`).forEach(input => {
+                            input.value = data.quantity;
+                        });
+                        $view.querySelectorAll(`.item-total[data-id="${productId}"]`).forEach(span => {
+                            span.textContent = newTotal.toFixed(2);
+                        });
+                        calculateTotals();
+                        showToast("Quantity updated");
+                    } else {
+                        showToast(data.message, 'error');
+                    }
+                },
+                error: function(xhr) {
+                    showToast("Error updating quantity", 'error');
+                }
+            });
+        }
+
+        function updatePackSize(productId, packSize) {
+            const packSizeInput = $view.querySelector(`.pack-size-input[data-id="${productId}"]`);
+            const buttons = $view.querySelectorAll(`.pack-size-btn[data-id="${productId}"]`);
+
+            $.ajax({
+                url: `/cart/update-pack-size/${productId}`,
+                type: "POST",
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'Content-Type': 'application/json'
+                },
+                data: JSON.stringify({ pack_size: packSize }),
+                success: function(data) {
+                    if (data.success) {
+                        packSizeInput.value = packSize;
+                        buttons.forEach(btn => {
+                            if (parseInt(btn.dataset.packSize) === packSize) {
+                                btn.classList.add('active');
+                            } else {
+                                btn.classList.remove('active');
+                            }
+                        });
+
+                        const unitPrice = parseFloat($view.querySelector(`.unit-price[data-id="${productId}"]`).textContent.replace(/[₱,]/g, ""));
+                        const quantity = parseInt($view.querySelector(`.quantity[data-id="${productId}"]`).value);
+                        const discountText = $view.querySelector(`.item-discount[data-id="${productId}"]`).textContent;
+                        const discountPercentage = discountText.includes("No Discount")
+                            ? 0
+                            : parseFloat(discountText.match(/\d+(\.\d+)?/)[0]);
+                        const discountedUnitPrice = unitPrice * (1 - discountPercentage / 100);
+                        const newTotal = discountedUnitPrice * quantity * packSize;
+
+                        $view.querySelectorAll(`.item-total[data-id="${productId}"]`).forEach(span => {
+                            span.textContent = newTotal.toFixed(2);
+                        });
+                        calculateTotals();
+                        showToast("Pack size updated");
+                    } else {
+                        showToast(data.message, 'error');
+                    }
+                },
+                error: function(xhr) {
+                    showToast("Error updating pack size", 'error');
+                }
+            });
+        }
+
+        function checkIfCartIsEmpty() {
+            const tbody = $view.querySelector("tbody");
+            const cartForm = $view.querySelector("#cart-form");
+
+            if (tbody && tbody.children.length === 0) {
+                cartForm.style.display = "none";
+
+                const emptyCartMessage = `
+                    <div class="bg-white rounded-lg shadow p-8 text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 
+                                0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <h2 class="text-xl font-medium text-gray-700 mt-4">Your cart is empty</h2>
+                        <p class="text-gray-500 mt-2">Start shopping to add items to your cart</p>
+                        <a href="/products" class="mt-6 inline-block px-6 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors">
+                            Browse Products
+                        </a>
+                    </div>
+                `;
+                cartForm.insertAdjacentHTML("afterend", emptyCartMessage);
+            }
+        }
+
+        function removeFromCartPopup(productId) {
+            const item = document.querySelector(`#cartPopup .cart-items [data-cart-item="${productId}"]`);
+            if (item) {
+                item.remove();
+                const badge = document.querySelector('#cartIcon .badge');
+                const currentCount = parseInt(badge ? badge.textContent : 0) || 0;
+                if (badge) {
+                    const newCount = currentCount - 1;
+                    badge.textContent = newCount;
+                    if (newCount <= 0) {
+                        badge.remove();
+                        document.querySelector('#cartIcon i').classList.remove('text-#198754-500');
+                    }
+                }
+                const cartItemsContainer = document.querySelector('#cartPopup .cart-items');
+                const remainingItems = cartItemsContainer.querySelectorAll('.cart-item');
+                if (remainingItems.length === 0) {
+                    cartItemsContainer.innerHTML = `
+                        <div class="cart-item text-center p-4">
+                            <img src="{{ asset('images/vegetable-placeholder.jpg') }}" 
+                                 class="w-24 h-24 object-contain mx-auto mb-3">
+                            <p class="product-name text-gray-600 font-medium">Your cart is empty!</p>
+                            <p class="text-sm text-gray-500 mt-1">Explore our fresh vegetables to start shopping.</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        $($view).find(".increase").off('click').on('click', function() {
+            const id = this.dataset.id;
+            const qtyInput = $view.querySelector(`.quantity[data-id="${id}"]`);
+            qtyInput.value = parseInt(qtyInput.value) + 1;
+            updateQuantity(id, qtyInput.value);
+        });
+
+        $($view).find(".decrease").off('click').on('click', function() {
+            const id = this.dataset.id;
+            const qtyInput = $view.querySelector(`.quantity[data-id="${id}"]`);
+            if (parseInt(qtyInput.value) > 1) {
+                qtyInput.value = parseInt(qtyInput.value) - 1;
+                updateQuantity(id, qtyInput.value);
+            }
+        });
+
+        $($view).find(".quantity").off('change').on('change', function() {
+            const id = this.dataset.id;
+            if (parseInt(this.value) < 1) this.value = 1;
+            updateQuantity(id, this.value);
+        });
+
+        $($view).find(".pack-size-btn").off('click').on('click', function() {
+            const id = this.dataset.id;
+            const packSize = parseInt(this.dataset.packSize);
+            updatePackSize(id, packSize);
+        });
+
+        $($view).find(".delete-btn").off('click').on('click', function() {
+            if (!confirm("Are you sure you want to remove this item from your cart?")) return;
+            const id = this.dataset.id;
+            $.ajax({
+                url: `/cart/remove/${id}`,
+                type: "DELETE",
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(data) {
+                    if (data.success) {
+                        $(this).closest("tr").remove();
+                        calculateTotals();
+                        removeFromCartPopup(id);
+                        showToast("Item removed from cart");
+                        checkIfCartIsEmpty();
+                    }
+                }.bind(this),
+                error: function(xhr) {
+                    showToast("Error removing item", 'error');
+                }
+            });
+        });
+
+        $($view).find(".delete-selected").off('click').on('click', function() {
+            const selectedItems = [...checkboxes].filter(cb => cb.checked).map(cb => cb.dataset.id);
+            if (selectedItems.length === 0) {
+                showToast("Please select items to delete", 'error');
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to remove ${selectedItems.length} item(s) from your cart?`)) return;
+
+            Promise.all(selectedItems.map(id => 
+                $.ajax({
+                    url: `/cart/remove/${id}`,
+                    type: "DELETE",
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                })
+            ))
+            .then(responses => Promise.all(responses.map(res => res.json())))
+            .then(results => {
+                if (results.every(r => r.success)) {
+                    selectedItems.forEach(id => {
+                        $view.querySelector(`.delete-btn[data-id="${id}"]`)?.closest("tr")?.remove();
+                        removeFromCartPopup(id);
+                    });
+                    calculateTotals();
+                    showToast(`${selectedItems.length} items removed from cart`);
+                    checkIfCartIsEmpty();
+                }
+            })
+            .catch(() => showToast("Error removing items", 'error'));
+        });
+
+        const checkoutModal = $view.querySelector("#checkout-modal");
+        const openCheckoutModal = $view.querySelector("#open-checkout-modal");
+        const closeCheckoutModal = $view.querySelector("#close-checkout-modal");
+        const checkoutItems = $view.querySelector("#checkout-items");
+        const checkoutSubtotal = $view.querySelector("#checkout-subtotal");
+        const checkoutDiscount = $view.querySelector("#checkout-discount");
+        const checkoutShipping = $view.querySelector("#checkout-shipping");
+        const checkoutTotal = $view.querySelector("#checkout-total");
+        const confirmOrder = $view.querySelector("#confirm-order");
+        const sendOtpBtn = $view.querySelector("#send-otp-btn");
+        const verifyOtpBtn = $view.querySelector("#verify-otp-btn");
+        const otpInput = $view.querySelector("#otp-input");
+        const otpMessage = $view.querySelector("#otp-message");
+        const otpSection = $view.querySelector("#otp-section");
+        const cartForm = $view.querySelector("#cart-form");
+
+        function populateCheckoutModal() {
+            const selectedItems = [...checkboxes].filter(cb => cb.checked).map(cb => cb.dataset.id);
+            if (selectedItems.length === 0) {
+                showToast("Please select at least one item to checkout", 'error');
+                return false;
+            }
+
+            checkoutItems.innerHTML = "";
+            let itemsData = [];
+
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    const row = checkbox.closest("tr");
+                    const productId = checkbox.dataset.id;
+                    const productNameElement = row.querySelector(".font-medium.text-gray-900");
+                    const productName = productNameElement ? productNameElement.textContent : "Unknown Product";
+                    const unitPriceElement = row.querySelector(".unit-price");
+                    const unitPrice = unitPriceElement ? parseFloat(unitPriceElement.textContent.replace(/[₱,]/g, "")) : 0;
+                    const quantityElement = row.querySelector(".quantity");
+                    const quantity = quantityElement ? parseInt(quantityElement.value) : 1;
+                    const packSizeElement = row.querySelector(".pack-size-input");
+                    const packSize = packSizeElement ? parseInt(packSizeElement.value) || 1 : 1;
+                    const discountElement = row.querySelector(".item-discount");
+                    const discountText = discountElement ? discountElement.textContent : "No Discount";
+                    const discountPercentage = discountText.includes("No Discount")
+                        ? 0
+                        : parseFloat(discountText.match(/\d+(\.\d+)?/)?.[0] || 0);
+                    const total = unitPrice * (1 - discountPercentage / 100) * quantity * packSize;
+                    const storeElement = row.querySelectorAll(".text-gray-500")[1];
+                    const storeName = storeElement ? storeElement.textContent.replace("Store: ", "") : "N/A";
+
+                    if (!productId || !productName || isNaN(unitPrice) || isNaN(quantity) || isNaN(packSize)) {
+                        showToast("Invalid item data detected. Please refresh and try again.", 'error');
+                        return;
+                    }
+
+                    const itemHtml = `
+                        <div class="flex justify-between mb-2">
+                            <div>
+                                <p class="text-sm font-medium text-gray-800">${productName}</p>
+                                <p class="text-xs text-gray-500">Store: ${storeName}</p>
+                                <p class="text-xs text-gray-500">Pack Size: ${packSize}kg, Quantity: ${quantity}, Discount: ${discountPercentage}% OFF</p>
+                            </div>
+                            <p class="text-sm font-medium">₱${total.toFixed(2)}</p>
+                        </div>
+                    `;
+                    checkoutItems.insertAdjacentHTML("beforeend", itemHtml);
+
+                    itemsData.push({
+                        product_id: productId,
+                        quantity: quantity,
+                        pack_size: packSize,
+                        unit_price: unitPrice,
+                        discount: discountPercentage
+                    });
+                }
+            });
+
+            if (itemsData.length === 0) {
+                showToast("No valid items selected for checkout.", 'error');
+                return false;
+            }
+
+            const totals = calculateTotals();
+            if (checkoutSubtotal) checkoutSubtotal.textContent = totals.subtotal.toFixed(2);
+            if (checkoutDiscount) checkoutDiscount.textContent = totals.totalSavings.toFixed(2);
+            if (checkoutShipping) checkoutShipping.textContent = totals.shipping.toFixed(2);
+            if (checkoutTotal) checkoutTotal.textContent = totals.total.toFixed(2);
+
+            return itemsData;
+        }
+
+        if (openCheckoutModal) {
+            openCheckoutModal.addEventListener("click", () => {
+                if (populateCheckoutModal()) {
+                    checkoutModal.classList.remove("hidden");
+                    // Reset OTP section
+                    otpSection.classList.add("hidden");
+                    otpInput.value = "";
+                    otpMessage.classList.add("hidden");
+                    confirmOrder.disabled = true;
+                }
+            });
+        }
+
+        if (closeCheckoutModal) {
+            closeCheckoutModal.addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                checkoutModal.classList.add("hidden");
+            });
+        }
+
+        if (checkoutModal) {
+            checkoutModal.addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.target === checkoutModal) {
+                    checkoutModal.classList.add("hidden");
+                }
+            });
+        }
+        //new added
+        if (sendOtpBtn) {
+            sendOtpBtn.addEventListener("click", () => {
+                sendOtpBtn.disabled = true;
+                sendOtpBtn.textContent = "Sending...";
+
+                $.ajax({
+                    url: '/otp/send',
+                    type: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            otpSection.classList.remove("hidden");
+                            otpMessage.classList.remove("hidden");
+                            otpMessage.classList.add("text-green-500");
+                            otpMessage.textContent = response.message;
+                            showToast(response.message);
+                        } else {
+                            otpMessage.classList.remove("hidden");
+                            otpMessage.classList.add("text-red-500");
+                            otpMessage.textContent = response.message;
+                            showToast(response.message, 'error');
+                        }
+                    },
+                    error: function(xhr) {
+                        const errorMsg = xhr.responseJSON?.message || 'Failed to send OTP.';
+                        otpMessage.classList.remove("hidden");
+                        otpMessage.classList.add("text-red-500");
+                        otpMessage.textContent = errorMsg;
+                        showToast(errorMsg, 'error');
+                    },
+                    complete: function() {
+                        sendOtpBtn.disabled = false;
+                        sendOtpBtn.textContent = "Send OTP";
+                    }
+                });
+            });
+        }
+
+        if (verifyOtpBtn) {
+            verifyOtpBtn.addEventListener("click", () => {
+                const otp = otpInput.value.trim();
+                if (!otp || otp.length !== 6) {
+                    otpMessage.classList.remove("hidden");
+                    otpMessage.classList.add("text-red-500");
+                    otpMessage.textContent = "Please enter a valid 6-digit OTP.";
+                    showToast("Please enter a valid 6-digit OTP.", 'error');
+                    return;
+                }
+
+                verifyOtpBtn.disabled = true;
+                verifyOtpBtn.textContent = "Verifying...";
+
+                $.ajax({
+                    url: '/otp/verify',
+                    type: 'POST',
+                    data: { otp: otp },
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            otpMessage.classList.remove("hidden");
+                            otpMessage.classList.add("text-green-500");
+                            otpMessage.textContent = response.message;
+                            showToast(response.message);
+                            confirmOrder.disabled = false; // Enable Confirm Order
+                        } else {
+                            otpMessage.classList.remove("hidden");
+                            otpMessage.classList.add("text-red-500");
+                            otpMessage.textContent = response.message;
+                            showToast(response.message, 'error');
+                        }
+                    },
+                    error: function(xhr) {
+                        const errorMsg = xhr.responseJSON?.message || 'Failed to verify OTP.';
+                        otpMessage.classList.remove("hidden");
+                        otpMessage.classList.add("text-red-500");
+                        otpMessage.textContent = errorMsg;
+                        showToast(errorMsg, 'error');
+                    },
+                    complete: function() {
+                        verifyOtpBtn.disabled = false;
+                        verifyOtpBtn.textContent = "Verify OTP";
+                    }
+                });
+            });
+        }
+
+        if (cartForm) {
+            cartForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+            });
+        }
+
+        if (confirmOrder) {
+            confirmOrder.addEventListener("click", () => {
+                const itemsData = [];
+                const selectedItems = [...checkboxes].filter(cb => cb.checked).map(cb => cb.dataset.id);
+                const paymentMethod = $view.querySelector('#payment_method').value; // Get selected payment method
+
+                if (selectedItems.length === 0) {
+                    showToast("Please select at least one item to checkout.", 'error');
+                    return;
+                }
+
+                checkboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        const row = checkbox.closest("tr");
+                        const productId = checkbox.dataset.id;
+                        const vendorId = row.dataset.vendorId;
+                        const unitPrice = parseFloat(row.querySelector(".unit-price").textContent.replace(/[₱,]/g, ""));
+                        const quantity = parseInt(row.querySelector(".quantity").value);
+                        const packSize = parseInt(row.querySelector(".pack-size-input").value) || 1;
+                        const discountText = row.querySelector(".item-discount").textContent;
+                        const discountPercentage = discountText.includes("No Discount") ? 0 : parseFloat(discountText.match(/\d+(\.\d+)?/)?.[0] || 0);
+
+                        itemsData.push({
+                            product_id: productId,
+                            vendor_id: vendorId,
+                            quantity: quantity,
+                            pack_size: packSize,
+                            unit_price: unitPrice,
+                            discount: discountPercentage
+                        });
+                    }
+                });
+
+                const totals = calculateTotals();
+                const payload = {
+                    items: itemsData,
+                    subtotal: totals.subtotal,
+                    discount: totals.totalSavings,
+                    shipping: paymentMethod === 'self_pickup' ? 0 : totals.shipping,
+                    total: paymentMethod === 'self_pickup' ? totals.subtotal : totals.total,
+                    payment_method: paymentMethod,
+                    address: $view.querySelector("#checkout-address").textContent
+                };
+
+                confirmOrder.disabled = true;
+                confirmOrder.textContent = "Processing...";
+
+                $.ajax({
+                    url: "/checkout",
+                    type: "POST",
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'Content-Type': 'application/json'
+                    },
+                    data: JSON.stringify(payload),
+                    success: function(data) {
+                        if (data.success) {
+                            selectedItems.forEach(id => {
+                                const row = $view.querySelector(`.delete-btn[data-id="${id}"]`)?.closest("tr");
+                                if (row) row.remove();
+                                removeFromCartPopup(id);
+                            });
+                            checkoutModal.classList.add("hidden");
+                            calculateTotals();
+                            checkIfCartIsEmpty();
+                            showToast("Order placed successfully! Order ID: " + data.order_id);
+                            showView('cart'); // Reload the cart tab
+                        } else {
+                            showToast(data.message || "Failed to place order.", 'error');
+                        }
+                    },
+                    error: function(xhr) {
+                        showToast("An error occurred: " + xhr.statusText, 'error');
+                    },
+                    complete: function() {
+                        confirmOrder.disabled = false;
+                        confirmOrder.textContent = "Confirm Order";
+                    }
+                });
+            });
+        }
+
+        calculateTotals();
+    }
+
+    if (viewName === 'account') {
+        $($view).find('.edit-btn').off('click').on('click', function() {
+            enableEditing('mobile');
+        });
+        $($view).find('#mobile-save-btn').off('click').on('click', function() {
+            saveProfileData('mobile');
+        });
+        $($view).find('#imageInputMobile').off('change').on('change', function() {
+            document.getElementById('imageUploadFormMobile').submit();
+        });
+    }
+}
+
+function enableEditing(viewType) {
+    const prefix = viewType === 'mobile' ? 'mobile' : 'desktop';
+    document.getElementById(`${prefix}-save-btn`).style.display = 'block';
+    const fields = ['name', 'email', 'phone', 'date'];
+    fields.forEach(field => {
+        const value = document.getElementById(`${prefix}-${field}`).textContent;
+        document.getElementById(`${prefix}-${field}`).innerHTML = `
+            <input type="text" class="form-control" value="${value}" id="${prefix}-${field}-input">
+        `;
+    });
+}
+
+function saveProfileData(viewType) {
+    const prefix = viewType === 'mobile' ? 'mobile' : 'desktop';
+    const genderInputName = viewType === 'mobile' ? 'gender-mobile' : 'gender-desktop';
+    const gender = document.querySelector(`input[name="${genderInputName}"]:checked`)?.value;
+    const profileData = {
+        name: document.getElementById(`${prefix}-name-input`).value,
+        email: document.getElementById(`${prefix}-email-input`).value,
+        phone: document.getElementById(`${prefix}-phone-input`).value,
+        gender: gender,
+        date: document.getElementById(`${prefix}-date-input`).value,
+        _token: window.csrfToken // Use the global variable
+    };
+    fetch(window.saveProfileRoute, { // Use the global variable
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify(profileData)
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            alert('Profile updated successfully!');
+            disableEditing(viewType);
+            window.location.reload();
+        } else {
+            alert('Error updating profile: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while saving. Please try again.');
+    });
+}
+
+function disableEditing(viewType) {
+    const prefix = viewType === 'mobile' ? 'mobile' : 'desktop';
+    document.getElementById(`${prefix}-save-btn`).style.display = 'none';
+    const fields = ['name', 'email', 'phone', 'date'];
+    fields.forEach(field => {
+        const input = document.getElementById(`${prefix}-${field}-input`);
+        if (input) {
+            const value = input.value;
+            document.getElementById(`${prefix}-${field}`).textContent = value;
+        }
+    });
+}
+
+document.getElementById('imageInputDesktop').addEventListener('change', function() {
+    document.getElementById('imageUploadFormDesktop').submit();
+});
+
+// Debounced resize handler
+let resizeTimeout;
+function handleResize() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+        const isDesktop = window.matchMedia('(min-width: 992px)').matches;
+        const currentView = window.location.pathname.split('/')[2] || 'dashboard';
+        const mobileOnlyViews = ['account']; // Views only available on mobile
+
+        document.querySelectorAll('.mobile-only').forEach(item => {
+            item.style.display = isDesktop ? 'none' : 'block';
+        });
+
+        // Only switch to dashboard if current view is mobile-only and we're on desktop
+        if (isDesktop && mobileOnlyViews.includes(currentView)) {
+            showView('dashboard');
+        }
+    }, 200);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.matchMedia('(min-width: 992px)').matches) {
+        document.querySelectorAll('.mobile-only').forEach(item => {
+            item.style.display = 'none';
+        });
+    }
+
+    const currentPath = window.location.pathname.split('/')[2] || 'dashboard';
+    showView(currentPath);
+
+    window.addEventListener('resize', handleResize);
+});
+
+// Debug reloads
+window.addEventListener('beforeunload', () => {
+    console.log('Page is about to reload');
+});

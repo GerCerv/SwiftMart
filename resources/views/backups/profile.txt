@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SWIFT MART</title>
+    <link rel="stylesheet" href="{{ asset('css/style.css')}}" />
+    <link rel="stylesheet" href="{{ asset('css/modal.css')}}" />
+    <link rel="stylesheet" href="{{ asset('css/uppernav.css')}}" />
+    <link rel="stylesheet" href="{{ asset('css/middlenav.css')}}" />
+    <link rel="stylesheet" href="{{ asset('css/sidebar.css')}}" />
+    <link rel="stylesheet" href="{{ asset('css/popups.css')}}" />
+    <link rel="stylesheet" href="{{ asset('css/lowernav.css')}}" />
+
+    
+    
+    
+    
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap JS -->
+    <script src="https://kit.fontawesome.com/YOUR-FONTAWESOME-KIT.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f5;
+            
+        }
+        
+        .profile-container {
+            max-width: 100%;
+            margin-left:10px;
+            margin-right:10px;
+            margin-top:20px;
+        }
+        
+        /* Profile Card */
+        .profile-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            /* margin-bottom: 15px; */
+            margin-top:15px;
+        }
+        
+        .sidebar {
+            background: #729979;
+            color: white;
+        }
+        
+        /* Menu Items */
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .menu-item:hover {
+            background: rgba(0,0,0,0.1);
+        }
+        
+        .menu-item i {
+            width: 24px;
+            text-align: center;
+            margin-right: 10px;
+            
+        }
+        /* MENU ITEMS COLOR */
+        .sidebar .menu-item .profnav {
+        color:rgb(255, 255, 255) !important; /* Your desired text color */
+        }
+        /* Submenu Items */
+        .submenu {
+            padding-left: 34px; /* Align with parent icon */
+            display: none;
+        }
+        
+        .submenu.show {
+            display: block;
+        }
+        
+        .submenu-item {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+        }
+        
+        .submenu-item:hover {
+            background: rgba(0,0,0,0.05);
+        }
+        
+        .submenu-item.active {
+            font-weight: 500;
+        }
+        
+        /* Content Views */
+        .content-view {
+            display: none;
+        }
+        
+        .content-view.active {
+            display: block;
+        }
+        
+        /* Profile Info Section */
+        .profile-info-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .profile-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .edit-btn {
+            background: none;
+            border: none;
+            color: #729979;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .profile-image-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .profile-image {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .profile-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .profile-image-placeholder {
+            font-size: 40px;
+            color: #999;
+        }
+        
+        .upload-btn {
+            background-color: white;
+            border: 1px solid #729979;
+            color: #729979;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .profile-field {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .profile-field label {
+            display: block;
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .profile-field .value {
+            font-size: 1rem;
+            color: #333;
+        }
+        
+        .gender-options {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .save-btn {
+            background-color: #729979;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        /* Mobile Layout (default) */
+        .desktop-profile-section {
+            display: none;
+        }
+        
+        /* Desktop Layout */
+        @media (min-width: 992px) {
+            .profile-container {
+                display: flex;
+                gap: 15px;
+            }
+            
+            .sidebar {
+                flex: 0 0 250px;
+                order: 1; /* Left side */
+            }
+            
+            .main-content {
+                flex: 2; /* Takes more space */
+                order: 2; /* Middle */
+            }
+            
+            .desktop-profile-section {
+                flex: 1;
+                order: 3; /* Right side */
+                display: block;
+            }
+            
+            /* Hide Account Details view in desktop */
+            #account-view {
+                display: none !important;
+            }
+            
+            /* New layout for dashboard content */
+            .dashboard-content {
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+            }
+            .profnav{
+                color:white;
+            }
+        }
+        .custom-file-upload {
+        display: inline-block;
+        padding: 10px 20px;
+        border: 2px solid #729979;
+        color: #729979;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        
+        font-size: 14px;
+        font-weight: 500;
+        }
+        
+        .custom-file-upload:hover {
+            background:rgb(137, 184, 145);
+            color:black;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .custom-file-upload:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+<!-- Upper navigation -->
+<x-uppernav/>
+
+<!-- Login Modal -->
+<x-loginmodal/>
+
+<!-- Sign Up Modal -->
+<x-signupmodal/>
+
+<!-- Middle Navigation (Sticky) -->
+<x-middlenav/>
+
+<!-- Lower Navigation -->
+<x-lowernav/>
+
+<!-- Side Navigation Bar -->
+<x-sidebar/>
+
+
+
+
+<!--     
+<div class="helloworld">
+    <div class="rectangle rect-28">
+    @if(session('user_name'))
+    <div class="container mt-5" style="width:500px;">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h3>User Profile</h3>
+            </div>
+            <div class="card-body">
+                <p><strong>Name:</strong> {{ session('user_name') }}</p>
+                <p><strong>Email:</strong> {{ session('user_email') }}</p>
+                
+            </div>
+        </div>
+    </div>
+    @endif
+    
+    </div>
+    <div class="rectangle rect-30">a</div>
+    <div class="rectangle rect-29">THIS IS WHERE THE TEXT OF THE NAME , EMAIL</div>
+    <div class="ellipse">IMAGE</div>
+    
+</div> -->
+
+
+
+<!-- ADDED -->
+<div class="profile-container">
+        <!-- Sidebar Navigation (Left) -->
+        <div class="profile-card sidebar">
+            <div class="d-flex align-items-center mb-3">
+                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" 
+                     style="width: 50px; height: 50px;">
+                    <i class="bi bi-person-fill text-dark"></i>
+                </div>
+                <h5 class="m-0 ms-2">MY PROFILE</h5>
+            </div>
+            
+            <!-- My Account with Submenu -->
+            <div class="menu-item" onclick="toggleSubmenu('account-submenu')">
+                <i class="bi bi-person"></i>
+                <span class="profnav">My Account</span>
+                <i class="bi bi-chevron-down ms-auto" id="account-chevron"></i>
+            </div>
+            <div class="submenu" id="account-submenu">
+                <div class="submenu-item active" onclick="showView('dashboard')">Dashboard</div>
+                <div class="submenu-item mobile-only" onclick="showView('account')">Account Details</div>
+            </div>
+            
+            <!-- Other Menu Items -->
+            <div class="menu-item" onclick="showView('cart')">
+                <i class="bi bi-cart"></i>
+                <span class="profnav">Cart</span>
+            </div>
+            <div class="menu-item" onclick="showView('purchase')">
+                <i class="bi bi-box-seam"></i>
+                <span class="profnav">Purchase</span>
+            </div>
+            <div class="menu-item" onclick="showView('address')">
+                <i class="bi bi-geo-alt"></i>
+                <span class="profnav">Address</span>
+            </div>
+            <div class="menu-item" onclick="showView('history')">
+                <i class="bi bi-clock-history"></i>
+                <span class="profnav">Order History</span>
+            </div>
+        </div>
+        
+        <!-- Main Content Area (Middle) -->
+        <div class="profile-card main-content">
+            <!-- Dashboard View -->
+            <div class="content-view active" id="dashboard-view">
+                <h4>DASHBOARD</h4>
+                <div class="dashboard-content">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Recent Orders</h6>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>Order #12345</strong>
+                                    <p class="mb-0 small">Delivered on Aug 15</p>
+                                </div>
+                                <button class="btn btn-sm btn-outline-secondary">View</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Account Summary</h6>
+                            <p>You have 2 active orders and 3 saved addresses.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Account Details View (only visible in mobile) -->
+            <div class="content-view" id="account-view">
+                <div class="profile-info-card">
+                    <div class="profile-header">
+                        <h4 class="profile-title">Account Details</h4>
+                        <button class="edit-btn" onclick="enableEditing('mobile')">
+                            <i class="bi bi-pencil"></i> EDIT
+                        </button>
+                    </div>
+                    <!-- IMAGE  -->
+                    <div class="profile-image-container">
+                        <div class="profile-image" id="mobile-profile-image">
+                            @if(auth()->user()->profile && auth()->user()->profile->image)
+                            <div class="profile-image-placeholder">
+                                <img src="{{ asset('storage/images/' . auth()->user()->profile->image) }}" >
+                            </div>
+                            @else
+                            <div class="profile-image-placeholder">
+                                <i class="bi bi-person"></i>
+                            </div>
+                            @endif
+                        </div>
+                        <form action="{{ route('profile.upload.image') }}" method="POST" enctype="multipart/form-data" id="imageUploadForm">
+                            @csrf
+                            <div class="mb-3">
+                                <!-- Hidden file input -->
+                                <input type="file" 
+                                    name="file" 
+                                    id="imageInput" 
+                                    accept="image/*" 
+                                    class="d-none">
+                                
+                                <!-- Custom styled label/button -->
+                                <label for="imageInput" class="custom-file-upload">
+                                    <i class="bi bi-camera"></i> ADD IMAGE
+                                </label>
+                            </div>
+                        </form>
+                    </div>
+
+                    <script>
+                        // Auto-submit image form when file is selected
+                        document.getElementById('imageInput').addEventListener('change', function() {
+                            document.getElementById('imageUploadForm').submit();
+                        });
+                        
+                    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+                    @if(session('user_id'))
+                    <div class="profile-field">
+                        <label>NAME</label>
+                        <div class="value" id="mobile-name">{{ Auth::user()->name }}</div>
+                    </div>
+                    
+                    <div class="profile-field">
+                        <label>EMAIL</label>
+                        <div class="value" id="mobile-email">{{ Auth::user()->email }}</div>
+                    </div>
+                    @endif
+                    <div class="profile-field">
+                        <label>PHONE</label>
+                        <div class="value" id="mobile-phone">{{ Auth::user()->phone ?? 'ADD NUMBER' }}</div>
+                    </div>
+                    
+
+
+
+
+
+                    <div class="profile-field">
+                        <label>GENDER</label>
+                        <div class="gender-options">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="gender" id="male-mobile" value="male"
+                                {{ (Auth::user()->profile->gender ?? '') == 'male' ? 'checked' : '' }}>
+                                <label class="form-check-label" for="male-mobile">Male</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="gender" id="female-mobile" value="female"
+                                {{ (Auth::user()->profile->gender ?? '') == 'female' ? 'checked' : '' }}>
+                                <label class="form-check-label" for="female-mobile">Female</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="gender" id="other-mobile" value="other"
+                                {{ (Auth::user()->profile->gender ?? '') == 'other' ? 'checked' : '' }}>
+                                <label class="form-check-label" for="other-mobile">Other</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    
+
+
+
+
+
+                    
+                    <div class="profile-field">
+                        <label>DATE</label>
+                        <div class="value" id="mobile-date">{{ Auth::user()->profile->date_of_birth ?? 'ADD DATE' }}</div>
+                    </div>
+                    
+                    <button class="save-btn" id="mobile-save-btn" style="display:none;">SAVE</button>
+                </div>
+            </div>
+            
+            <!-- Other Views -->
+            <div class="content-view" id="cart-view">
+                <h4>Your Cart</h4>
+                <p>Cart items will appear here</p>
+            </div>
+            
+            <div class="content-view" id="purchase-view">
+                <h4>Purchase History</h4>
+                <p>Your purchases will appear here</p>
+            </div>
+            
+            <div class="content-view" id="address-view">
+                <h4>Address Book</h4>
+                <p>Your saved addresses will appear here</p>
+            </div>
+            
+            <div class="content-view" id="history-view">
+                <h4>Order History</h4>
+                <p>Your complete order history will appear here</p>
+            </div>
+        </div>
+        
+        <!-- Desktop Profile Section (Right) - Hidden on mobile -->
+        <div class="profile-card desktop-profile-section">
+            <div class="profile-info-card">
+                <div class="profile-header">
+                    <h4 class="profile-title">Account Details</h4>
+                    <button class="edit-btn" onclick="enableEditing('desktop')">
+                        <i class="bi bi-pencil"></i> EDIT
+                    </button>
+                </div>
+
+
+
+
+
+                
+                
+                
+                <div class="container">
+                    
+
+                    
+
+                    <!-- Display Profile Image -->
+                    
+                    <div class="profile-image-container">
+                        <div class="profile-image" id="mobile-profile-image">
+                            
+                            @if(auth()->user()->profile && auth()->user()->profile->image)
+                            <div class="profile-image-placeholder">
+                                <img src="{{ asset('storage/images/' . auth()->user()->profile->image) }}" >
+                            </div>
+                            @else
+                            <div class="profile-image-placeholder">
+                                <i class="bi bi-person"></i>
+                            </div>
+                            @endif
+                            
+                        </div>
+                        <!-- Image Upload Form -->
+                        <form action="{{ route('profile.upload.image') }}" method="POST" enctype="multipart/form-data" id="imageUploadForm">
+                            @csrf
+                            <div class="mb-3">
+                                <!-- Hidden file input -->
+                                <input type="file" 
+                                    name="file" 
+                                    id="imageInput" 
+                                    accept="image/*" 
+                                    class="d-none">
+                                
+                                <!-- Custom styled label/button -->
+                                <label for="imageInput" class="custom-file-upload">
+                                    <i class="bi bi-camera"></i> ADD IMAGE
+                                </label>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    
+
+                    
+                </div>
+
+                <script>
+                    // Auto-submit image form when file is selected
+                    document.getElementById('imageInput').addEventListener('change', function() {
+                        document.getElementById('imageUploadForm').submit();
+                    });
+                    
+                </script>
+                
+                
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                @if(session('user_id'))
+                <div class="profile-field">
+                    <label>NAME</label>
+                    <div class="value" id="desktop-name">{{ Auth::user()->name }}</div>
+                </div>
+                <div class="profile-field">
+                    <label>EMAIL</label>
+                    <div class="value" id="desktop-email">{{ Auth::user()->email }}</div>
+                    
+                </div>
+                @endif
+
+                
+
+                <div class="profile-field">
+                    <label>PHONE</label>
+                    <div class="value" id="desktop-phone">{{ Auth::user()->phone ?? 'ADD NUMBER' }}</div>
+                </div>
+                
+
+
+                <div class="profile-field">
+                    <label>GENDER</label>
+                    <div class="gender-options">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="gender-desktop" id="male-desktop" value="male"
+                                {{ (Auth::user()->profile->gender ?? '') == 'male' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="male-desktop">Male</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="gender-desktop" id="female-desktop" value="female"
+                                {{ (Auth::user()->profile->gender ?? '') == 'female' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="female-desktop">Female</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="gender-desktop" id="other-desktop" value="other"
+                                {{ (Auth::user()->profile->gender ?? '') == 'other' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="other-desktop">Other</label>
+                        </div>
+                    </div>
+                </div>
+                
+
+
+
+
+                <div class="profile-field">
+                    <label>DATE</label>
+                    <div class="value" id="desktop-date">{{ Auth::user()->profile->date_of_birth ?? 'ADD DATE' }}</div>
+                </div>
+                
+                <button class="save-btn" id="desktop-save-btn" style="display:none;">SAVE</button>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <!-- footer -->
+    <x-footernav/>
+    <!-- ADD SCRIPT  -->
+    <script>
+        // Toggle submenu visibility
+        function toggleSubmenu(id) {
+            const submenu = document.getElementById(id);
+            const chevron = document.getElementById(id.replace('submenu', 'chevron'));
+            
+            submenu.classList.toggle('show');
+            chevron.classList.toggle('bi-chevron-down');
+            chevron.classList.toggle('bi-chevron-up');
+        }
+        
+        // Switch between content views
+        function showView(viewName) {
+            // Update active states
+            document.querySelectorAll('.submenu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            if (viewName === 'dashboard' || viewName === 'account') {
+                event.currentTarget.classList.add('active');
+            }
+            
+            // Show selected view
+            document.querySelectorAll('.content-view').forEach(view => {
+                view.classList.remove('active');
+            });
+            document.getElementById(viewName + '-view').classList.add('active');
+        }
+        
+        // Initialize with Dashboard view showing
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('account-submenu').classList.add('show');
+            
+            // Hide Account Details menu item in desktop view
+            if (window.matchMedia('(min-width: 992px)').matches) {
+                document.querySelectorAll('.mobile-only').forEach(item => {
+                    item.style.display = 'none';
+                });
+            }
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (window.matchMedia('(min-width: 992px)').matches) {
+                // Desktop view - hide mobile-only items
+                document.querySelectorAll('.mobile-only').forEach(item => {
+                    item.style.display = 'none';
+                });
+                // Make sure we're showing dashboard view
+                showView('dashboard');
+            } else {
+                // Mobile view - show mobile-only items
+                document.querySelectorAll('.mobile-only').forEach(item => {
+                    item.style.display = 'block';
+                });
+            }
+        });
+        
+        // Profile editing functions
+        function enableEditing(viewType) {
+            const prefix = viewType === 'mobile' ? 'mobile' : 'desktop';
+            
+            // Show save button
+            document.getElementById(`${prefix}-save-btn`).style.display = 'block';
+            
+            // Convert fields to editable inputs
+            const fields = ['name', 'email', 'phone', 'date'];
+            fields.forEach(field => {
+                const value = document.getElementById(`${prefix}-${field}`).textContent;
+                document.getElementById(`${prefix}-${field}`).innerHTML = `
+                    <input type="text" class="form-control" value="${value}" id="${prefix}-${field}-input">
+                `;
+            });
+        }
+
+        function uploadImage(viewType) {
+            const prefix = viewType === 'mobile' ? 'mobile' : 'desktop';
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*';
+            
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const profileImage = document.getElementById(`${prefix}-profile-image`);
+                        profileImage.innerHTML = `<img src="${event.target.result}" alt="Profile Image">`;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            fileInput.click();
+        }
+
+        //new added
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle save button clicks for both mobile and desktop
+            document.getElementById('mobile-save-btn').addEventListener('click', function() {
+                saveProfileData('mobile');
+            });
+            
+            document.getElementById('desktop-save-btn').addEventListener('click', function() {
+                saveProfileData('desktop');
+            });
+        });
+
+        function saveProfileData(viewType) {
+            const prefix = viewType === 'mobile' ? 'mobile' : 'desktop';
+            
+            // Get the selected gender value
+            const genderInputName = viewType === 'mobile' ? 'gender' : 'gender-desktop';
+            const gender = document.querySelector(`input[name="${genderInputName}"]:checked`).value;
+            
+            // Collect data from form inputs
+            const profileData = {
+                name: document.getElementById(`${prefix}-name-input`).value,
+                email: document.getElementById(`${prefix}-email-input`).value,
+                phone: document.getElementById(`${prefix}-phone-input`).value,
+                gender: gender, // Add gender to the data
+                date: document.getElementById(`${prefix}-date-input`).value,
+                _token: '{{ csrf_token() }}'
+            };
+
+            // Rest of your AJAX code remains the same...
+            fetch('{{ route("profile.save") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(profileData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Profile updated successfully!');
+                    disableEditing(viewType);
+                    // Optionally refresh the page to show updated gender selection
+                    window.location.reload();
+                } else {
+                    alert('Error updating profile: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while saving. Please try again.');
+            });
+        }
+
+        function disableEditing(viewType) {
+            const prefix = viewType === 'mobile' ? 'mobile' : 'desktop';
+            
+            // Hide save button
+            document.getElementById(`${prefix}-save-btn`).style.display = 'none';
+            
+            // Convert inputs back to display text
+            const fields = ['name', 'email', 'phone', 'date'];
+            fields.forEach(field => {
+                const input = document.getElementById(`${prefix}-${field}-input`);
+                if (input) {
+                    const value = input.value;
+                    document.getElementById(`${prefix}-${field}`).textContent = value;
+                }
+            });
+        }
+    </script>
+
+
+
+
+
+
+
+
+
+    
+</body>
+</html>

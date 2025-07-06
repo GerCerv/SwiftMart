@@ -1,0 +1,678 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light position-sticky top-0 shadow-sm" style="z-index: 1030;">
+    <div class="container-fluid d-flex align-items-center justify-content-between py-2">
+        <img src="{{ asset('images/logona.png') }}" alt="Logo" class="ms-4" style="height: 100px;">
+
+        <!-- Search Bar -->
+        <div class="search-container">
+            <div class="input-group">
+                <input type="text" class="form-control rounded-start" placeholder="Search Product">
+                <button class="btn btn-primary rounded-end">
+                    <i class="fa fa-search text-white"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Icons: Wishlist, Cart, Account (Hidden in Phone Mode) -->
+        <div class="d-none d-md-flex align-items-center gap-4 icon-container" style="margin-right:25px;">
+            <div class="wishlist-container">
+                <a href="#" 
+                   class="text-success text-decoration-none d-flex flex-column align-items-center icon-animate wishlist-trigger" 
+                   id="wishlistIcon">
+                    <i class="hello fa fa-heart fa-lg mb-1 {{ auth()->check() && auth()->user()->wishlist()->count() > 0 ? 'text-#198754-500' : '' }}"></i>
+                    <span class="d-none d-lg-inline" style="margin-top:10px;">Wish List</span>
+                    @auth
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            {{ auth()->user()->wishlist()->count() }}
+                            <span class="visually-hidden">Wishlist items</span>
+                        </span>
+                    @endauth
+                </a>
+
+                <!-- Pop-up Box for Wishlist -->
+                <div class="wishlist-popup position-absolute" 
+                     id="wishlistPopup" 
+                     style="top: 100%; right: 0; z-index: 1000;">
+                    <h6 class="text-center mb-2">Your Wishlist</h6>
+                    @auth
+                    <div class="wishlist-items max-h-96 overflow-y-auto" >
+                    @else
+                    <div class="wishlist-items max-h-96 overflow-y-auto" style="grid-template-columns: repeat(1, 1fr);" >
+                    @endauth
+                        @auth
+                            @if(auth()->user()->wishlist()->count() > 0)
+                                @foreach(auth()->user()->wishlist()->with('product')->get() as $item)
+                                    <div class="wishlist-item" data-wishlist-item="{{ $item->product_id }}">
+                                        <img src="{{ $item->product->image ? asset('storage/products/' . $item->product->image) : asset('images/emp.jpg') }}" 
+                                             alt="{{ $item->product->name }}" 
+                                             class="rounded border">
+                                        <div class="items">
+                                            <p class="product-name">{{ $item->product->name }}</p>
+                                            <p class="product-price">₱{{ number_format($item->product->price, 2) }}</p>
+                                        </div>
+                                        <button class="wishlist-remove-btn "
+                                                data-product-id="{{ $item->product_id }}"
+                                                title="Remove from Wishlist">
+                                            <i class="hi fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                @endforeach
+                            @else
+                                <div class="wishlist-item" >
+                                    <img src="{{ asset('images/emp.jpg') }}" class="gap-4"></img>
+                                    <div class="items">
+                                        <p class="product-name">No wishlist</p>
+                                    </div>
+                                </div>
+                                <div class="wishlist-item">
+                                    <img src="{{ asset('images/emp.jpg') }}" class="gap-4"></img>
+                                    <div class="items">
+                                        <p class="product-name">No wishlist</p>
+                                    </div>
+                                </div>
+                                <div class="wishlist-item">
+                                    <img src="{{ asset('images/emp.jpg') }}" class="gap-4"></img>
+                                    <div class="items">
+                                        <p class="product-name">No wishlist</p>
+                                    </div>
+                                </div>
+                                <div class="wishlist-item">
+                                    <img src="{{ asset('images/emp.jpg') }}" class="gap-4"></img>
+                                    <div class="items">
+                                        <p class="product-name">No wishlist</p>
+                                    </div>
+                                </div>
+                            @endif
+                        @else
+                            <!-- Guest view - centered content with login trigger -->
+                            <div class="wishlist-guest-view p-4 d-flex flex-column align-items-center">
+                                <img src="{{ asset('images/emp.jpg') }}" 
+                                    class="guest-wishlist-image mb-3"
+                                    style="width: 120px; height: 120px; object-fit: contain;">
+                                <p class="text-muted text-center mb-3">
+                                    Please login to view your wishlist
+                                </p>
+                                <button class="btn btn-primary btn-sm w-75"
+                                        onclick="event.preventDefault();
+                                                new bootstrap.Modal(document.getElementById('loginModal')).show();">
+                                    <i class="fas fa-sign-in-alt me-2"></i> Login
+                                </button>
+                            </div>
+                        @endauth
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Cart with Hover Dropdown -->
+            <div class="cart-container">
+                <a href="#" 
+                   class="text-success text-decoration-none d-flex flex-column align-items-center icon-animate cart-trigger" 
+                   id="cartIcon">
+                    <i class="green fa fa-shopping-cart fa-lg mb-1 {{ auth()->check() && auth()->user()->cart()->count() > 0 ? 'text-#198754-500' : '' }}"></i>
+                    <span class="d-none d-lg-inline" style="margin-top:10px;">Cart</span>
+                    @auth
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            {{ auth()->user()->cart()->count() }}
+                            <span class="visually-hidden">Cart items</span>
+                        </span>
+                    @endauth
+                </a>
+
+                <!-- Pop-up Box for Cart -->
+                <div class="cart-popup position-absolute" 
+                     id="cartPopup" 
+                     style="top: 100%; right: 0; z-index: 1000; width: 350px;">
+                    <h6 class="text-center mb-3 font-semibold text-green-800">Your Fresh Picks</h6>
+                    <div class="cart-items max-h-96 overflow-y-auto">
+                        @auth
+                            @if(auth()->user()->cart()->count() > 0)
+                                @foreach(auth()->user()->cart()->with('product.vendor')->get() as $item)
+                                    <div class="cart-item bg-white rounded-lg shadow-sm p-4 mb-3" data-cart-item="{{ $item->product_id }}">
+                                        <img src="{{ $item->product->image ? asset('storage/products/' . $item->product->image) : asset('images/vegetable-placeholder.jpg') }}" 
+                                             alt="{{ $item->product->name }}" 
+                                             class="w-full h-32 object-cover rounded-md mb-3">
+                                        <h3 class="product-name text-lg font-bold text-gray-800">{{ $item->product->name }}</h3>
+                                        <p class="product-price text-green-600 font-semibold">₱{{ number_format($item->product->price, 2) }}/kg</p>
+                                        <p class="product-store text-sm text-gray-500">From: {{ $item->product->vendor ? $item->product->vendor->store_name : 'Unknown' }}</p>
+                                        <p class="product-category text-sm text-gray-500">Type: {{ ucfirst($item->product->category) }}</p>
+                                        <p class="product-stock text-sm {{ $item->product->stock > 10 ? 'text-green-500' : 'text-red-500' }}">
+                                            {{ $item->product->stock > 10 ? 'In Stock' : 'Low Stock (' . $item->product->stock . ' left)' }}
+                                        </p>
+                                        <div class="quantity-control flex items-center mt-3">
+                                            <span class="text-sm text-gray-600 mr-2">Qty:</span>
+                                            <button class="quantity-decrease btn btn-sm btn-outline-green-600 hover:bg-green-600 hover:text-white" 
+                                                    data-product-id="{{ $item->product_id }}">-</button>
+                                            <input type="number" class="quantity-input form-control form-control-sm w-12 text-center mx-1 border-green-600" 
+                                                   value="{{ $item->quantity }}" 
+                                                   data-product-id="{{ $item->product_id }}"
+                                                   min="1" max="{{ $item->product->stock }}">
+                                            <button class="quantity-increase btn btn-sm btn-outline-green-600 hover:bg-green-600 hover:text-white" 
+                                                    data-product-id="{{ $item->product_id }}">+</button>
+                                            <button class="cart-remove-btn ml-auto text-red-500 hover:text-red-700" 
+                                                    data-product-id="{{ $item->product_id }}"
+                                                    title="Remove from Cart">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @else
+                                <div class="cart-item text-center p-4">
+                                    <img src="{{ asset('images/vegetable-placeholder.jpg') }}" 
+                                         class="w-24 h-24 object-contain mx-auto mb-3">
+                                    <p class="product-name text-gray-600 font-medium">Your cart is empty!</p>
+                                    <p class="text-sm text-gray-500 mt-1">Explore our fresh vegetables to start shopping.</p>
+                                    
+                                </div>
+                            @endif
+                        @else
+                            <div class="cart-guest-view p-4 text-center">
+                                <img src="{{ asset('images/vegetable-placeholder.jpg') }}" 
+                                     class="w-32 h-32 object-contain mx-auto mb-3">
+                                <p class="text-gray-600 font-medium">Login to start your fresh shopping!</p>
+                                <p class="text-sm text-gray-500 mt-1">Access our farm-fresh vegetables by signing in.</p>
+                                <button class="btn btn-green-600 text-white btn-sm w-full mt-3"
+                                        onclick="event.preventDefault();
+                                                new bootstrap.Modal(document.getElementById('loginModal')).show();">
+                                    <i class="fas fa-sign-in-alt me-2"></i> Login
+                                </button>
+                            </div>
+                        @endauth
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Menu -->
+            <a href="#" class="text-success text-decoration-none d-flex flex-column align-items-center icon-animate" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="green fa fa-user fa-lg mb-1"></i>
+                @auth
+                    <span class="d-none d-lg-inline" style="margin-top:10px;">{{ Auth::user()->name ?? 'Account' }}</span>
+                @else
+                    <span class="d-none d-lg-inline" style="margin-top:10px;">Account</span>
+                @endauth
+            </a>
+
+            <!-- Dropdown Menu -->
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu" style="margin-top:-40px;">
+                @auth
+                    <li><a class="dropdown-item" href="{{ route('profile', Auth::user()->name) }}">Profile</a></li>
+                    <li>
+                        <form action="{{ route('logout') }}" method="POST" class="m-0">
+                            @csrf
+                            <button type="submit" class="dropdown-item">Logout</button>
+                        </form>
+                    </li>
+                @else
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Login</a></li>
+                @endauth
+            </ul>
+        </div>
+
+        <!-- Mobile Menu Button -->
+        <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</nav>
+
+<!-- JavaScript for Wishlist and Cart Popups -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle delayed hide for wishlist and cart popups
+    const wishlistIcon = document.querySelector('#wishlistIcon');
+    const wishlistPopup = document.querySelector('#wishlistPopup');
+    const cartIcon = document.querySelector('#cartIcon');
+    const cartPopup = document.querySelector('#cartPopup');
+    let hideTimeout;
+
+    function showPopup(popup, otherPopup) {
+        clearTimeout(hideTimeout);
+        otherPopup.style.opacity = '0';
+        otherPopup.style.transform = 'translateX(-50%) scale(0.8)';
+        setTimeout(() => {
+            if (otherPopup.style.opacity === '0') {
+                otherPopup.style.display = 'none';
+            }
+        });
+        popup.style.display = 'block';
+        popup.style.opacity = '1';
+        popup.style.transform = 'translateX(-50%) scale(1)';
+    }
+
+    function hidePopup(popup) {
+        hideTimeout = setTimeout(() => {
+            popup.style.opacity = '0';
+            popup.style.transform = 'translateX(-50%) scale(0.8)';
+            setTimeout(() => {
+                if (popup.style.opacity === '0') {
+                    popup.style.display = 'none';
+                }
+            });
+        }, 300);
+    }
+
+    wishlistIcon.addEventListener('mouseenter', () => showPopup(wishlistPopup, cartPopup));
+    wishlistPopup.addEventListener('mouseenter', () => showPopup(wishlistPopup, cartPopup));
+    wishlistIcon.addEventListener('mouseleave', () => hidePopup(wishlistPopup));
+    wishlistPopup.addEventListener('mouseleave', () => hidePopup(wishlistPopup));
+
+    cartIcon.addEventListener('mouseenter', () => showPopup(cartPopup, wishlistPopup));
+    cartPopup.addEventListener('mouseenter', () => showPopup(cartPopup, wishlistPopup));
+    cartIcon.addEventListener('mouseleave', () => hidePopup(cartPopup));
+    cartPopup.addEventListener('mouseleave', () => hidePopup(cartPopup));
+
+    // Wishlist remove functionality
+    document.querySelectorAll('.wishlist-remove-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const productId = this.getAttribute('data-product-id');
+            fetch(`/wishlist/remove/${productId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.querySelector(`[data-wishlist-item="${productId}"]`).remove();
+                    const badge = document.querySelector('#wishlistIcon .badge');
+                    const currentCount = parseInt(badge ? badge.textContent : 0) || 0;
+                    if (badge) {
+                        badge.textContent = currentCount - 1;
+                        if (currentCount - 1 === 0) {
+                            badge.remove();
+                            document.querySelector('#wishlistIcon i').classList.remove('text-#198754-500');
+                            document.querySelector('#wishlistPopup .wishlist-items').innerHTML = `
+                                <div class="wishlist-item">
+                                    <img src="{{ asset('images/emp.jpg') }}" class="gap-4"></img>
+                                    <div class="items">
+                                        <p class="product-name">No wishlist</p>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }
+                    const productBtn = document.querySelector(`.wishlist-btn[data-product-id="${productId}"]`);
+                    if (productBtn) {
+                        productBtn.classList.replace('text-red-500', 'text-gray-400');
+                        productBtn.querySelector('i').classList.replace('fas', 'far');
+                        productBtn.setAttribute('title', 'Add to Wishlist');
+                    }
+                    showToast(data.message, 'success');
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showToast('An error occurred. Please try again.', 'error');
+            });
+        });
+    });
+
+    // Cart remove functionality REAL
+    document.querySelectorAll('.cart-remove-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const productId = this.getAttribute('data-product-id');
+            fetch(`/cart/remove/${productId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.querySelector(`[data-cart-item="${productId}"]`).remove();
+                    const badge = document.querySelector('#cartIcon .badge');
+                    const currentCount = parseInt(badge ? badge.textContent : 0) || 0;
+                    if (badge) {
+                        badge.textContent = currentCount - 1;
+                        if (currentCount - 1 == 0) {
+                            badge.remove();
+                            document.querySelector('#cartIcon i').classList.remove('text-#198754-500');
+                            
+                        }
+                    }
+                    //YOU CAN ADD TOAST HERE
+                    const event = new CustomEvent('cart-updated', {
+                        detail: { 
+                            productId: productId, 
+                            action: 'removed',
+                            countChange: -1
+                        }
+                    });
+                    document.dispatchEvent(event);
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showToast('An error occurred. Please try again.', 'error');
+            });
+        });
+    });
+
+    // Quantity update functionality
+    document.querySelectorAll('.quantity-increase, .quantity-decrease, .quantity-input').forEach(element => {
+        element.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const productId = this.getAttribute('data-product-id');
+            const input = document.querySelector(`.quantity-input[data-product-id="${productId}"]`);
+            let quantity = parseInt(input.value) || 1;
+
+            if (this.classList.contains('quantity-increase')) {
+                quantity++;
+            } else if (this.classList.contains('quantity-decrease')) {
+                quantity = Math.max(1, quantity - 1);
+            } else if (this.classList.contains('quantity-input')) {
+                quantity = Math.max(1, parseInt(this.value) || 1);
+            }
+
+            input.value = quantity;
+
+            fetch(`/cart/update/${productId}`, {
+                method: 'PATCH',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ quantity: quantity })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    input.value = data.quantity;
+                    //YOU CAN ADD TOAST HERE
+                } else {
+                    showToast(data.message, 'error');
+                    input.value = data.quantity || 1;
+                }
+            })
+            .catch(error => {
+                showToast('An error occurred. Please try again.', 'error');
+                input.value = 1;
+            });
+        });
+    });
+
+    // Sync wishlist additions from shop.blade.php
+    document.addEventListener('wishlist-updated', function(e) {
+        const { productId, action, countChange, product } = e.detail;
+        const wishlistPopup = document.querySelector('#wishlistPopup .wishlist-items');
+        const wishlistBadge = document.querySelector('#wishlistIcon .badge');
+        const wishlistIcon = document.querySelector('#wishlistIcon i');
+        
+        updateWishlistCounter(countChange);
+        
+        if (action === 'added') {
+            addToWishlistPopup(product);
+        } else if (action === 'removed') {
+            removeFromWishlistPopup(productId);
+        }
+    });
+
+    // Sync cart additions from shop.blade.php
+    document.addEventListener('cart-updated', function(e) {
+        const { productId, action, countChange, product } = e.detail;
+        const cartPopup = document.querySelector('#cartPopup .cart-items');
+        const cartBadge = document.querySelector('#cartIcon .badge');
+        const cartIcon = document.querySelector('#cartIcon i');
+        
+        updateCartCounter(countChange);
+        
+        if (action === 'added') {
+            addToCartPopup(product);
+        } else if (action === 'removed') {
+            removeFromCartPopup(productId);
+        }
+    });
+
+    function updateWishlistCounter(change) {
+        const badge = document.querySelector('#wishlistIcon .badge');
+        const icon = document.querySelector('#wishlistIcon i');
+        
+        if (!badge && change > 0) {
+            const badgeHtml = `<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">1<span class="visually-hidden">Wishlist items</span></span>`;
+            document.querySelector('#wishlistIcon').insertAdjacentHTML('beforeend', badgeHtml);
+            icon.classList.add('text-#198754-500');
+        } else if (badge) {
+            const currentCount = parseInt(badge.textContent) || 0;
+            const newCount = currentCount + change;
+            
+            if (newCount <= 0) {
+                badge.remove();
+                icon.classList.remove('text-#198754-500');
+                document.querySelector('#wishlistPopup .wishlist-items').innerHTML = `
+                    <div class="wishlist-item">
+                        <img src="{{ asset('images/emp.jpg') }}" class="gap-4"></img>
+                        <div class="items">
+                            <p class="product-name">No wishlist</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                badge.textContent = newCount;
+            }
+        }
+    }
+
+    function addToWishlistPopup(product) {
+        const wishlistItems = document.querySelector('#wishlistPopup .wishlist-items');
+        
+        if (document.querySelector(`[data-wishlist-item="${product.id}"]`)) return;
+        
+        const itemHtml = `
+            <div class="wishlist-item" data-wishlist-item="${product.id}">
+                <img src="${product.image || '{{ asset('images/emp.jpg') }}'}" 
+                    alt="${product.name}" 
+                    class="rounded border">
+                <div class="items">
+                    <p class="product-name">${product.name}</p>
+                    <p class="product-price">₱${product.price.toFixed(2)}</p>
+                </div>
+                <button class="wishlist-remove-btn"
+                        data-product-id="${product.id}"
+                        title="Remove from Wishlist">
+                    <i class="hi fas fa-trash"></i>
+                </button>
+            </div>`;
+        
+        if (wishlistItems.querySelector('.product-name').textContent === 'No wishlist') {
+            wishlistItems.innerHTML = itemHtml;
+        } else {
+            wishlistItems.insertAdjacentHTML('afterbegin', itemHtml);
+        }
+        
+        const removeBtn = wishlistItems.querySelector(`.wishlist-remove-btn[data-product-id="${product.id}"]`);
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                fetch(`/wishlist/remove/${product.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        this.closest(`[data-wishlist-item="${product.id}"]`).remove();
+                        const event = new CustomEvent('wishlist-updated', {
+                            detail: { 
+                                productId: product.id, 
+                                action: 'removed',
+                                countChange: -1
+                            }
+                        });
+                        document.dispatchEvent(event);
+                        //YOU CAN ADD TOAST HERE
+                    }
+                });
+            });
+        }
+    }
+
+    function removeFromWishlistPopup(productId) {
+        const item = document.querySelector(`[data-wishlist-item="${productId}"]`);
+        if (item) {
+            item.remove();
+            if (document.querySelectorAll('#wishlistPopup .wishlist-item').length === 0) {
+                document.querySelector('#wishlistPopup .wishlist-items').innerHTML = `
+                    <div class="wishlist-item">
+                        <img src="{{ asset('images/emp.jpg') }}" class="gap-4"></img>
+                        <div class="items">
+                            <p class="product-name">No wishlist</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    function updateCartCounter(change) {
+        const badge = document.querySelector('#cartIcon .badge');
+        const icon = document.querySelector('#cartIcon i');
+        
+        if (!badge && change > 0) {
+            const badgeHtml = `<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">1<span class="visually-hidden">Cart items</span></span>`;
+            document.querySelector('#cartIcon').insertAdjacentHTML('beforeend', badgeHtml);
+            icon.classList.add('text-#198754-500');
+        } else if (badge) {
+            const currentCount = parseInt(badge.textContent) || 0;
+            const newCount = currentCount + change;
+            
+            if (newCount <= 0) {
+                badge.remove();
+                icon.classList.remove('text-#198754-500');
+                
+            } else {
+                badge.textContent = newCount;
+            }
+        }
+    }
+
+    function addToCartPopup(product) {
+        const cartItems = document.querySelector('#cartPopup .cart-items');
+        
+        if (document.querySelector(`[data-cart-item="${product.id}"]`)) return;
+        
+        const itemHtml = `
+            <div class="cart-item bg-white rounded-lg shadow-sm p-4 mb-3" data-cart-item="${product.id}">
+                <img src="${product.image || '{{ asset('images/vegetable-placeholder.jpg') }}'}" 
+                     alt="${product.name}" 
+                     class="w-full h-32 object-cover rounded-md mb-3">
+                <h3 class="product-name text-lg font-bold text-gray-800">${product.name}</h3>
+                <p class="product-price text-green-600 font-semibold">₱${product.price.toFixed(2)}/kg</p>
+                <p class="product-store text-sm text-gray-500">From: ${product.store_name || 'Unknown'}</p>
+                <p class="product-category text-sm text-gray-500">Type: ${product.category.charAt(0).toUpperCase() + product.category.slice(1)}</p>
+                <p class="product-stock text-sm ${product.stock > 10 ? 'text-green-500' : 'text-red-500'}">
+                    ${product.stock > 10 ? 'In Stock' : 'Low Stock (' + product.stock + ' left)'}
+                </p>
+                <div class="quantity-control flex items-center mt-3">
+                    <span class="text-sm text-gray-600 mr-2">Qty:</span>
+                    <button class="quantity-decrease btn btn-sm btn-outline-green-600 hover:bg-green-600 hover:text-white" 
+                            data-product-id="${product.id}">-</button>
+                    <input type="number" class="quantity-input form-control form-control-sm w-12 text-center mx-1 border-green-600" 
+                           value="${product.quantity}" 
+                           data-product-id="${product.id}" 
+                           min="1" max="${product.stock || 999}">
+                    <button class="quantity-increase btn btn-sm btn-outline-green-600 hover:bg-green-600 hover:text-white" 
+                            data-product-id="${product.id}">+</button>
+                    <button class="cart-remove-btn ml-auto text-red-500 hover:text-red-700" 
+                            data-product-id="${product.id}"
+                            title="Remove from Cart">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>`;
+        
+        if (cartItems.querySelector('.product-name')?.textContent === 'No items in cart') {
+            cartItems.innerHTML = itemHtml;
+        } else {
+            cartItems.insertAdjacentHTML('afterbegin', itemHtml);
+        }
+
+        const removeBtn = cartItems.querySelector(`.cart-remove-btn[data-product-id="${product.id}"]`);
+        const increaseBtn = cartItems.querySelector(`.quantity-increase[data-product-id="${product.id}"]`);
+        const decreaseBtn = cartItems.querySelector(`.quantity-decrease[data-product-id="${product.id}"]`);
+        const input = cartItems.querySelector(`.quantity-input[data-product-id="${product.id}"]`);
+
+        [removeBtn, increaseBtn, decreaseBtn, input].forEach(element => {
+            if (element) {
+                element.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const productId = this.getAttribute('data-product-id');
+                    if (this.classList.contains('cart-remove-btn')) {
+                        fetch(`/cart/remove/${productId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                this.closest(`[data-cart-item="${productId}"]`).remove();
+                                const event = new CustomEvent('cart-updated', {
+                                    detail: { 
+                                        productId: productId, 
+                                        action: 'removed',
+                                        countChange: -1
+                                    }
+                                });
+                                document.dispatchEvent(event);
+                                //YOU CAN ADD TOAST HERE
+                            }
+                        });
+                    } else {
+                        let quantity = parseInt(input.value) || 1;
+                        if (this.classList.contains('quantity-increase')) {
+                            quantity++;
+                        } else if (this.classList.contains('quantity-decrease')) {
+                            quantity = Math.max(1, quantity - 1);
+                        } else if (this.classList.contains('quantity-input')) {
+                            quantity = Math.max(1, parseInt(this.value) || 1);
+                        }
+                        input.value = quantity;
+                        fetch(`/cart/update/${productId}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ quantity: quantity })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                input.value = data.quantity;
+                                //YOU CAN ADD TOAST HERE
+                            } else {
+                                showToast(data.message, 'error');
+                                input.value = data.quantity || 1;
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+    function showToast(message, type = 'success') {
+        alert(message); // Replace with a proper toast library if desired
+    }
+    
+});
+</script>
+
+    

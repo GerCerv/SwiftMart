@@ -1,0 +1,464 @@
+<?php
+
+namespace App\Http\Controllers;
+use Carbon\Carbon;
+
+use App\Models\Vendor;
+use App\Models\Product;
+use App\Models\Order;
+
+use App\Models\DeliveryMan;
+use App\Models\OrderItem;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
+use App\Mail\OrderStatusUpdated;
+use Illuminate\Support\Facades\Mail;
+class VendorController extends Controller
+{
+    //assign delivery men
+    public function assignDelivery(Request $request, $orderId)
+    {
+        $request->validate([
+            'delivery_man_id' => 'required|exists:delivery_men,id',
+        ]);
+
+        $order = Order::findOrFail($orderId);
+        $order->delivery_man_id = $request->delivery_man_id;
+        $order->save();
+
+        return back()->with('success', 'Delivery man assigned successfully.');
+    }
+    // Register Vendor (Sign Up)
+    public function vendorregister(Request $request)
+{
+    // Validate the incoming data
+    $validator = Validator::make($request->all(), [
+        'name' => 'required|string|max:255',
+        'store_name' => 'required',
+        'email' => 'required|email|unique:vendors,email',
+        'password' => 'required|min:6|confirmed',
+        'phone' => 'required|regex:/^[0-9]{10,15}$/',
+    ]);
+
+    // Check if validation fails
+    if ($validator->fails()) {
+        return back()->withErrors($validator)->withInput();
+    }
+
+    // Create the vendor
+    $vendor = Vendor::create([
+        'name' => $request->name,
+        'store_name' => $request->store_name,
+        'email' => $request->email,
+        'phone' => $request->phone,
+        'password' => Hash::make($request->password),
+        'status' => 'pending', // Default status as 'pending'
+    ]);
+
+    // Send the verification email
+    $vendor->sendEmailVerificationNotification();
+
+    // Flash the success message and redirect back to the registration page
+    session()->flash('success', 'Registration successful! Please check your email to verify your account.');
+
+    return redirect()->route('vendor.register');
+}
+
+
+    public function verifyEmail(Request $request, $id, $hash)
+    {
+        $vendor = Vendor::findOrFail($id);
+
+        if (!hash_equals($hash, sha1($vendor->getEmailForVerification()))) {
+            return response()->json(['error' => 'Invalid verification link'], 400);
+        }
+
+        if (!$vendor->hasVerifiedEmail()) {
+            $vendor->markEmailAsVerified();
+            return response()->json(['success' => 'Email verified successfully!']);
+        }
+        
+        return response()->json(['message' => 'Email already verified']);
+    }
+
+    
+
+
+
+    public function vendorLogin(Request $request)
+{
+    // Validate the login input
+    $validated = $request->validate([
+        'email' => 'required|email',
+        'password' => 'required|min:6',
+    ]);
+
+    // Attempt login with vendor credentials
+    if (Auth::guard('vendor')->attempt($validated)) {
+        $vendor = Auth::guard('vendor')->user();
+
+        // Check if vendor's email is verified
+        if (!$vendor->hasVerifiedEmail()) {
+            Auth::guard('vendor')->logout();
+            return back()->withErrors(['email' => 'Please verify your email before logging in.']);
+        }
+
+        // Check if vendor's account is approved
+        if ($vendor->status !== 'approved') {
+            Auth::guard('vendor')->logout();
+            return back()->withErrors(['email' => 'Your account is still pending approval.']);
+        }
+
+        // Successful login, redirect to the dashboard
+        
+        return redirect()->route('vendor.dashboard', ['name' => $vendor->name])
+        ->with('success', 'Welcome back, ' . $vendor->name . '!');
+        }
+
+    // If login fails
+    return back()->withErrors(['email' => 'Invalid email or password. Please try again.']);
+}
+
+public function vendorlogout(Request $request)
+{
+    Auth::guard('vendor')->logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+    return redirect('/vendor/login'); // or wherever you want to redirect
+}
+    
+
+
+//WOKING
+public function dashboard($name = 'dashboard')
+    {
+        $totalSales = OrderItem::where('status', 'Delivered')
+        ->where('vendor_id', auth()->id()) // or $vendorId if passed manually
+        ->sum('total_price');
+        $deliveryMen = DeliveryMan::where('is_active', true)->get();  // Fetch active delivery men
+        $vendor = Auth::guard('vendor')->user();
+        
+        if (!$vendor) {
+            return redirect()->route('vendor.login')->with('error', 'Please log in first.');
+        }
+        $vendororders = Order::whereHas('items', function ($query) use ($vendor) {
+            $query->where('vendor_id', $vendor->vendor_id);
+        })
+            ->with(['items.product', 'items.vendor', 'user'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+
+
+
+
+            $pendingCount = OrderItem::where('vendor_id', $vendor->vendor_id)
+            ->where('status', 'Pending')
+            ->count();
+
+        $processing = OrderItem::where('vendor_id', $vendor->vendor_id)
+            ->where('status', 'Processing')
+            ->count();
+
+        $ready = OrderItem::where('vendor_id', $vendor->vendor_id)
+            ->where('status', 'Ready for Pickup')
+            ->count();
+
+        $delivery = OrderItem::where('vendor_id', $vendor->vendor_id)
+            ->where('status', 'Out for Delivery')
+            ->count();
+
+        $delivered = OrderItem::where('vendor_id', $vendor->vendor_id)
+            ->where('status', 'Delivered')
+            ->count();
+
+
+
+        $allOrdersCount = Order::whereHas('items', function ($query) use ($vendor) {
+            $query->where('vendor_id', $vendor->vendor_id);
+        })
+        ->count();
+
+
+
+
+            
+        // Fetch products for pagination
+        $products = Product::where('vendor_id', $vendor->vendor_id)
+                          ->latest()
+                          ->paginate(10);
+
+        // Count total active products for this vendor
+        $totalActiveProducts = Product::where('vendor_id', $vendor->vendor_id)
+                                     ->where('status', 'Active')
+                                     ->count();
+
+        $newActiveProducts = Product::where('vendor_id', $vendor->vendor_id)
+                                   ->where('stock', 0)
+                                   ->count();
+
+        $viewData = [
+            'name' => $vendor->name,
+            'products' => $products,
+            'vendororders' => $vendororders,
+            'totalActiveProducts' => $totalActiveProducts,
+            'newActiveProducts' => $newActiveProducts,
+            'pending' => $pendingCount,
+            'processing' => $processing,
+            'ready' => $ready,
+            'delivery' => $delivery,
+            'delivered' => $delivered, // 👈 Pass the new variable to the view
+            'allitem' =>  $allOrdersCount,
+            'deliveryMen' => $deliveryMen,  // Pass the active delivery men to the view
+            'totalSales' => $totalSales,
+            
+        ];
+
+        return view('vendor_dashboard', $viewData);
+    }
+    
+
+    public function dashboardTab()
+    {
+        $totalSales = OrderItem::where('status', 'Delivered')
+        ->where('vendor_id', auth()->id()) // or $vendorId if passed manually
+        ->sum('total_price');
+        $vendor = Auth::guard('vendor')->user();
+        
+
+        if (!$vendor) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+
+        $pendingCount = OrderItem::where('vendor_id', $vendor->vendor_id)
+            ->where('status', 'Pending')
+            ->count();
+
+        $processing = OrderItem::where('vendor_id', $vendor->vendor_id)
+            ->where('status', 'Processing')
+            ->count();
+
+        $ready = OrderItem::where('vendor_id', $vendor->vendor_id)
+            ->where('status', 'Ready for Pickup')
+            ->count();
+
+        $delivery = OrderItem::where('vendor_id', $vendor->vendor_id)
+            ->where('status', 'Out for Delivery')
+            ->count();
+
+        $delivered = OrderItem::where('vendor_id', $vendor->vendor_id)
+            ->where('status', 'Delivered')
+            ->count();
+        
+
+        $allOrdersCount = Order::whereHas('items', function ($query) use ($vendor) {
+            $query->where('vendor_id', $vendor->vendor_id);
+        })
+        ->count();
+
+       
+
+        $vendororders = Order::whereHas('items', function ($query) use ($vendor) {
+            $query->where('vendor_id', $vendor->vendor_id);
+        })
+        ->with(['items.product', 'items.vendor', 'user'])
+        ->orderBy('created_at', 'desc')
+        ->paginate(5); // This will paginate with 5 orders per page
+
+        $totalActiveProducts = Product::where('vendor_id', $vendor->vendor_id)
+                                     ->where('status', 'Active')
+                                     ->count();
+
+        $newActiveProducts = Product::where('vendor_id', $vendor->vendor_id)
+                                   ->where('stock', 0)
+                                   ->count();
+
+        return view('vendor.dashboard', [
+            'totalActiveProducts' => $totalActiveProducts,
+            'newActiveProducts' => $newActiveProducts,
+            'vendororders' => $vendororders,
+            'pending' => $pendingCount,
+            'processing' => $processing,
+            'ready' => $ready,
+            'delivery' => $delivery,
+            'delivered' => $delivered, // 👈 Pass the new variable to the view
+            'allitem' =>  $allOrdersCount,
+            'totalSales' => $totalSales,
+            
+        ]);
+    }
+
+    public function productsTab()
+    {
+        $vendor = Auth::guard('vendor')->user();
+        
+        if (!$vendor) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        
+        $products = Product::where('vendor_id', $vendor->vendor_id)
+                          ->latest()
+                          ->paginate(10);
+
+        return view('vendor.products', compact('products'));
+    }
+
+
+
+    
+    public function ordersTab(Request $request)
+{
+    $status = $request->query('status', 'all');
+    $deliveryMen = DeliveryMan::where('is_active', true)->get();
+    $vendor = Auth::guard('vendor')->user();
+
+    if (!$vendor) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+
+    $query = OrderItem::where('vendor_id', $vendor->vendor_id)
+        ->with(['order.user', 'product']);
+
+    if ($status !== 'all') {
+        $query->whereHas('order', function ($q) use ($status) {
+            $q->where('status', $status);
+        });
+    }
+
+    $vendorOrderItems = $query->get();
+
+    $vendororders = $vendorOrderItems->groupBy('order_id')->map(function ($items) {
+        $order = $items->first()->order;
+        return [
+            'id' => $order->id,
+            'created_at' => $order->created_at,
+            'user' => $order->user,
+            'items' => $items,
+            'total' => $items->sum(function ($item) {
+                $packSize = $item->pack_size ?? 1;
+                $discountedPrice = $item->unit_price * $packSize * (1 - ($item->discount / 100));
+                return $discountedPrice * $item->quantity;
+            }),
+            'status' => $order->status,
+            'delivery_man_id' => $order->delivery_man_id,
+            'shipping_address' => $order->shipping_address,
+        ];
+    })
+    ->sortByDesc('created_at')
+    ->values();
+
+    return view('vendor.orders', compact('vendororders', 'deliveryMen'));
+}
+    
+
+
+
+
+    public function updateOrderStatus(Request $request, $orderId)
+{
+    $vendor = Auth::guard('vendor')->user();
+    
+    if (!$vendor) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+
+    $validated = $request->validate([
+        'status' => 'required|in:Pending,Processing,Ready for Pickup,Out for Delivery,Delivered,Cancelled'
+    ]);
+
+    // Get the order with items from this vendor
+    $order = Order::whereHas('items', function ($query) use ($vendor) {
+            $query->where('vendor_id', $vendor->vendor_id);
+        })
+        ->with(['user', 'items' => function($query) use ($vendor) {
+            $query->where('vendor_id', $vendor->vendor_id);
+        }, 'items.product'])
+        ->findOrFail($orderId);
+
+    // Update status for all items from this vendor in the order
+    $affectedRows = OrderItem::where('order_id', $orderId)
+        ->where('vendor_id', $vendor->vendor_id)
+        ->update(['status' => $validated['status']]);
+    
+        
+    $order->update(['status' => $validated['status']]);
+
+    // Send email notification for specific status changes
+    if (in_array($validated['status'], ['Processing', 'Ready for Pickup', 'Out for Delivery', 'Delivered'])) {
+        try {
+            Mail::to($order->user->email)->send(new OrderStatusUpdated($order, $validated['status']));
+        } catch (\Exception $e) {
+            // Log email error but don't fail the request
+            \Log::error("Failed to send status email for order {$order->id}: " . $e->getMessage());
+        }
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Order items status updated successfully',
+        'affected_items' => $affectedRows
+    ]);
+}
+//correct
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+    public function reportsTab()
+    {
+        $vendor = Auth::guard('vendor')->user();
+        
+        if (!$vendor) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        return view('vendor.reports');
+    }
+
+    public function settingsTab()
+    {
+        $vendor = Auth::guard('vendor')->user();
+        
+        if (!$vendor) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        return view('vendor.settings');
+    }
+
+
+
+
+
+    
+    // Example: Admin approves a vendor
+    public function approveVendor($vendorId)
+    {
+        $vendor = Vendor::findOrFail($vendorId);
+        $vendor->status = 'approved';
+        $vendor->save();
+
+        return redirect()->route('vendor.dashboard');
+    }
+
+}

@@ -1,0 +1,326 @@
+/* anotehr new add */
+
+/* Small Arrow on Top */
+.wishlist-popup::before,
+.cart-popup::before {
+    content: "";
+    position: absolute;
+    top: -10px;
+    left: 90%;
+    transform: translateX(-50%) rotate(45deg);
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-top: 1px solid #ddd;
+    border-left: 1px solid #ddd;
+}
+
+/* Hide pop-ups by default */
+.wishlist-popup, .cart-popup {
+  display: none;
+  position: absolute;
+  width: 400px;
+  min-height: 400px;
+  padding: 15px;
+  top: 140%;
+  left: -125px;
+  transform: translateX(-50%) scale(0.8);
+  border-radius: 8px;
+  border: 1px solid rgb(165, 255, 157);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  background: white;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  z-index: 10;
+}
+
+/* Show popup when hovering over icon or the popup itself */
+.wishlist-popup,
+.cart-popup,
+.wishlist-popup:hover,
+.cart-popup:hover {
+  
+  animation: popOut 0.5s ease-in-out;
+  
+  
+}
+
+/* Pop-out animation */
+@keyframes popOut {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.8);
+  }
+  80% {
+    transform: translateX(-50%) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+}
+
+/* Smooth fade-out only when neither the icon nor popup is hovered */
+#wishlistIcon:not(:hover) + .wishlist-popup:not(:hover),
+.cart-trigger:not(:hover) + .cart-popup:not(:hover) {
+  opacity: 0;
+  transform: translateX(-50%) scale(0.8);
+  transition: opacity 3s ease-in-out, transform 3s ease-in-out;
+}
+
+/* Wishlist & Cart item layout */
+.wishlist-popup .wishlist-items,
+.cart-popup .cart-items {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  justify-content: center;
+}
+
+.wishlist-popup img,
+.cart-popup img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+}
+
+
+
+
+
+
+/* Center align the content inside */
+.cart-popup h6 {
+  margin-bottom: 10px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* Grid layout for items */
+.cart-popup .cart-items {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2-column layout */
+  gap: 10px;
+  justify-content: center;
+}
+
+.cart-item {
+  position: relative;
+  text-align: center;
+}
+
+/* Image styles */
+.cart-item img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+}
+
+/* X Delete Icon */
+.cart-item .delete-item {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: red;
+  color: white;
+  font-size: 12px;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Buy Button */
+.cart-item .buy-btn {
+  display: block;
+  margin-top: 5px;
+  padding: 6px;
+  background: green;
+  color: white;
+  text-align: center;
+  font-size: 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.cart-item .buy-btn:hover {
+  background: darkgreen;
+}
+
+
+
+
+
+
+
+/* Grid layout for items */
+.cart-popup .cart-items {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr); /* 2-column layout */
+  gap: 10px;
+  justify-content: center;
+}
+
+
+
+
+
+
+
+
+.wishlist-popup h6, .cart-popup h6 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2d4a26; /* Dark green for headers */
+}
+
+
+
+.cart-item {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 12px;
+}
+
+.cart-item img {
+  width: 100%;
+  height: 128px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.cart-item .product-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2d4a26;
+  margin-bottom: 8px;
+}
+
+.cart-item .product-price {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4a8a3b;
+  margin-bottom: 6px;
+}
+
+.cart-item .product-store, .cart-item .product-category, .cart-item .product-stock {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.cart-item .product-stock.text-green-500 {
+  color: #4a8a3b;
+}
+
+.cart-item .product-stock.text-red-500 {
+  color: #dc3545;
+}
+
+.quantity-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quantity-decrease, .quantity-increase {
+  width: 28px;
+  height: 28px;
+  line-height: 1;
+  font-size: 0.9rem;
+  padding: 0;
+  border: 1px solid #4a8a3b;
+  background: #f7faf4;
+  color: #4a8a3b;
+  border-radius: 4px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.quantity-decrease:hover, .quantity-increase:hover {
+  background: #4a8a3b;
+  color: #ffffff;
+}
+
+.quantity-input {
+  width: 48px !important;
+  height: 28px;
+  font-size: 0.9rem;
+  text-align: center;
+  border: 1px solid #4a8a3b;
+  border-radius: 4px;
+  color: #2d4a26;
+}
+
+.cart-remove-btn {
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  padding: 0;
+  font-size: 1rem;
+}
+
+.cart-remove-btn:hover {
+  color: #b02a37;
+}
+
+.cart-item.text-center {
+  background: none;
+  box-shadow: none;
+}
+
+.cart-guest-view {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+}
+
+.cart-guest-view img {
+  width: 128px;
+  height: 128px;
+  object-fit: contain;
+  margin-bottom: 12px;
+}
+
+.btn-green-600 {
+  background-color: #4a8a3b;
+  border-color: #4a8a3b;
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.btn-green-600:hover {
+  background-color: #3b6f2f;
+  border-color: #3b6f2f;
+}
+
+.btn-outline-green-600 {
+  border-color: #4a8a3b;
+  color: #4a8a3b;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-outline-green-600:hover {
+  background-color: #4a8a3b;
+  color: #ffffff;
+}

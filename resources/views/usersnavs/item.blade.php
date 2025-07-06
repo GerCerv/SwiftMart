@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ $product->name }} - Fresh Vegetables</title>
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/modal.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/uppernav.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/middlenav.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/popups.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/lowernav.css') }}" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/YOUR-FONTAWESOME-KIT.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <style>
+        /* [Existing styles remain unchanged] */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(to bottom, #f0fdf4, #ffffff);
+        }
+        .product-card {
+            background: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+        }
+        .main-image img {
+            transition: transform 0.5s ease;
+        }
+        .main-image:hover img {
+            transform: scale(1.1);
+        }
+        .thumbnail {
+            cursor: pointer;
+            border: 2px solid transparent;
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        .thumbnail:hover, .thumbnail.active {
+            border-color: #10b981;
+            transform: scale(1.05);
+        }
+        .pack-size-btn {
+            border: 1px solid #e5e7eb;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .pack-size-btn:hover {
+            background: #f3f4f6;
+            transform: translateY(-2px);
+        }
+        .pack-size-btn.active {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+        .quantity-btn {
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        .quantity-btn:hover:not(:disabled) {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+        }
+        .quantity-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .quantity-input {
+            width: 4rem;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            padding: 0.5rem;
+        }
+        input.quantity-input::-webkit-outer-spin-button,
+        input.quantity-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input.quantity-input {
+            -moz-appearance: textfield;
+        }
+        .action-btn {
+            padding: 0.75rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .add-to-cart-btn {
+            background: #22c55e;
+            color: white;
+            border: 1px solid rgb(255, 255, 255);
+        }
+        .add-to-cart-btn:hover {
+            background: #16a34a;
+            border-color: #16a34a;
+            transform: translateY(-2px);
+        }
+        .buy-now-btn {
+            background: #ef4444;
+            color: white;
+            border: 1px solid #ef4444;
+        }
+        .buy-now-btn:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+        .wishlist-btn {
+            padding: 0.75rem 2rem;
+            border-radius: 0.75rem;
+            border:1px solid rgb(214, 214, 214);
+            padding: 0.75rem;
+            background: #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .wishlist-btn:hover {
+            background: #f3f4f6;
+            transform: scale(1.1);
+        }
+        .description-card {
+            background: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+            padding: 2.5rem;
+        }
+        .vendor-card {
+            background: #ecfdf5;
+            border-radius: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        .vendor-card:hover {
+            transform: translateY(-5px);
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .animate-fade-out {
+            animation: fadeOut 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(10px); }
+        }
+        /* Pricing Section Animations */
+        .price-container {
+            animation: slideUp 0.5s ease-out forwards;
+        }
+        .price-text {
+            transition: transform 0.3s ease, color 0.3s ease;
+        }
+        .price-text:hover {
+            transform: scale(1.1);
+            color: #059669;
+        }
+        .original-price {
+            transition: transform 0.3s ease, color 0.3s ease;
+        }
+        .original-price:hover {
+            transform: scale(1.05);
+            color: #6b7280;
+        }
+        .discount-badge {
+            transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        }
+        .discount-badge:hover {
+            transform: scale(1.1);
+            background-color: #10b981;
+            color: #ffffff;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 768px) {
+            .product-card {
+                padding: 1.5rem;
+            }
+            .main-image {
+                height: 16rem;
+            }
+            .thumbnail {
+                width: 4rem;
+                height: 4rem;
+            }
+            .action-btn {
+                padding: 0.5rem 1.5rem;
+                font-size: 0.875rem;
+            }
+            .price-text {
+                font-size: 2rem;
+            }
+        }
+        /* Divider Styling */
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #10b981, transparent);
+            opacity: 0;
+            animation: fadeInDivider 0.6s ease-out forwards;
+            margin-left: auto;
+            margin-right: auto;
+            width: 80%;
+        }
+        @keyframes fadeInDivider {
+            from { opacity: 0; width: 0; }
+            to { opacity: 1; width: 80%; }
+        }
+        .pack-size-btn {
+            padding: 4px 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background-color: white;
+            color: grey;
+            transition: all 0.2s ease;
+        }
+        .pack-size-btn:hover {
+            background-color: rgb(138, 255, 191); /* Tailwind gray-100 */
+        }
+        .pack-size-btn.active {
+            background-color: #10b981; /* Tailwind blue-500 */
+            color: white;
+            border-color: #10b981;
+        }
+    </style>
+</head>
+<body>
+    <x-uppernav />
+    <x-loginmodal />
+    <x-signupmodal />
+    <x-middlenav />
+    <x-lowernav />
+    <x-sidebar />
+
+    <div class="container mx-auto px-4 py-12 max-w-7xl">
+        <nav class="flex items-center text-sm text-gray-600 mb-3 ml-3 -mt-6">
+            <div class="inline-flex items-center space-x-2 border-b border-grey-400">
+                <a href="{{ url('/home') }}" class="text-green-700 hover:text-green-500 hover:underline transition-colors"><i class="fa fa-home mr-2"></i>Home</a>
+                <span class="text-gray-400">/</span>
+                <a href="{{ url('/shop') }}" class="text-green-700 hover:text-green-500 hover:underline transition-colors"><i class="fa fa-shopping-bag mr-2"></i>Shop</a>
+                <span class="text-gray-400">/</span>
+                <a href="{{ route('vendor.show', $product->vendor->vendor_id) }}" class="text-green-600 hover:text-green-600 hover:underline transition-colors"><i class="fas fa-store mr-2"></i>{{ ucfirst($product->vendor->store_name) }}</a>
+                <span class="text-gray-400">/</span>
+                <span>Product</span>
+            </div>
+        </nav>
+
+        <!-- Product Section -->
+        <div class="product-card p-8 md:flex md:space-x-8 mb-12 border border-green-600">
+            <!-- Image Gallery -->
+            <div class="md:w-1/2">
+                <div x-data="{
+                    images: [
+                        @if($product->image) '{{ asset('storage/products/' . $product->image) }}', @endif
+                        @if($product->image2) '{{ asset('storage/products/' . $product->image2) }}', @endif
+                        @if($product->image3) '{{ asset('storage/products/' . $product->image3) }}', @endif
+                        @if($product->image4) '{{ asset('storage/products/' . $product->image4) }}', @endif
+                        @if($product->image5) '{{ asset('storage/products/' . $product->image5) }}' @endif
+                    ],
+                    active: 0
+                }">
+                    <!-- Main Image -->
+                    <div class="main-image h-96 bg-gray-100 flex items-center justify-center overflow-hidden rounded-2xl mb-6 relative">
+                        @if($product->discount > 0)
+                            <!-- Discount Badge on top of the image -->
+                            <div class="absolute top-8 -right-16 bg-pink-600 text-white text-2xl font-extrabold px-16 py-2 shadow-lg transform rotate-45 hover:scale-110 transition-transform duration-300 z-30">
+                                {{ $product->discount }}% OFF
+                            </div>
+                        @endif
+
+                        <template x-if="images.length > 0">
+                            <img :src="images[active]" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                        </template>
+                        <template x-if="images.length === 0">
+                            <i class="fas fa-image text-4xl text-gray-300"></i>
+                        </template>
+                    </div>
+                    <!-- Thumbnails -->
+                    <div class="flex space-x-3 justify-center">
+                        <template x-for="(image, index) in images" :key="index">
+                            <img :src="image"
+                                 @click="active = index"
+                                 class="w-20 h-20 object-cover rounded thumbnail"
+                                 :class="{ 'active': active === index }">
+                        </template>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2 mt-4">
+                    @if($product->wishlists->count() > 0)
+                        <i class="bi bi-heart-fill text-red-500"></i>
+                        <!-- Desktop -->
+                        <span class="text-sm text-gray-600 hidden md:inline inline-flex items-center gap-1">
+                        <i class="far fa-heart text-red-600"></i> by {{ $product->wishlists->count() }} people
+                        </span>
+
+                        <!-- Mobile -->
+                        <span class="text-sm text-gray-600 md:hidden inline-flex items-center gap-1">
+                        <i class="far fa-heart text-red-600"></i> {{ $product->wishlists->count() }}
+                        </span>
+                    @endif
+                    @if($product->carts->count() > 0)
+                        <i class="bi bi-heart-fill text-red-500 items-end"></i>
+                        <!-- Desktop -->
+                        <span class="text-sm text-gray-600 hidden md:inline">
+                        <i class="fas fa-shopping-basket text-green-600"></i> by {{ $product->carts->count() }} people
+                        </span>
+
+                        <!-- Mobile -->
+                        <span class="text-sm text-gray-600 md:hidden inline-flex items-center gap-1">
+                        <i class="fas fa-shopping-basket text-green-600"></i>{{ $product->carts->count() }}
+                        </span>
+                    @endif
+                    <i class="fas fa-shopping-cart text-green-600"></i>
+                    <span class="text-sm text-gray-600">
+                        <span class="text-gray-600 hidden md:inline">Number of Sold </span>{{ $product->soldCount() }}
+                    </span>
+                    <i class="fas fa-store text-green-600"></i>
+                    <span class="text-sm text-gray-600 inline-flex items-center gap-1">
+                    <span class="text-gray-600 hidden md:inline">Social Account:</span>
+                    <a href="{{$stallSetting->facebook ?? '#'}}" target="_blank" rel="noopener noreferrer">
+                        <i class="fab fa-facebook text-blue-600 ml-2"></i>
+                    </a>
+                    <a href="{{$stallSetting->instagram ?? '#'}}" target="_blank" rel="noopener noreferrer">
+                        <i class="fab fa-instagram text-pink-600 ml-2"></i>
+                    </a>
+                    </span>
+                </div>
+            </div>
+
+            @php
+                $basePrice = $product->discount > 0
+                    ? $product->price - ($product->price * ($product->discount / 100))
+                    : $product->price;
+            @endphp
+
+            <!-- Product Details -->
+            <div class="md:w-1/2 mt-8 md:mt-0"
+                 x-data="{
+                     selectedPack: {{ $cart->pack_size ?? 1 }},
+                     quantity: {{ $cart->quantity ?? 1 }},
+                     basePrice: {{ $basePrice }},
+                     original: {{ $product->price }},
+                     get totalPrice() {
+                         return (this.basePrice * this.selectedPack * this.quantity).toFixed(2);
+                     },
+                     get pricekg() {
+                         return (this.original * this.selectedPack * this.quantity).toFixed(2);
+                     },
+                     increaseQty() {
+                         this.quantity++;
+                     },
+                     decreaseQty() {
+                         if (this.quantity > 1) this.quantity--;
+                     }
+                 }">
+                <h1 class="text-3xl md:text-4xl font-bold mb-3 text-gray-800">{{ ucfirst(strtolower($product->name)) }}</h1>
+                <div class="flex items-center mb-4" x-data="{
+                    rating: {{ $userRating }},
+                    canRate: {{ $canRate ? 'true' : 'false' }},
+                    productId: {{ $product->id }},
+                    ratingCount: {{ $product->ratings()->count() }},
+                    soldCount: {{ $product->soldCount() }},
+                    submitting: false,
+                    submitRating(newRating) {
+                        if (!this.canRate || this.submitting) return;
+                        this.submitting = true;
+                        this.rating = newRating;
+                        fetch('/ratings/store', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                product_id: this.productId,
+                                rating: newRating
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                this.ratingCount = data.ratingCount;
+                                this.soldCount = data.soldCount;
+                                showToast('Rating submitted successfully!', 'success');
+                            } else {
+                                showToast(data.message, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            showToast('An error occurred. Please try again.', 'error');
+                        })
+                        .finally(() => {
+                            this.submitting = false;
+                        });
+                    }
+                }">
+                    <div class="flex text-yellow-400">
+                        @if($canRate)
+                            @for($i = 1; $i <= 5; $i++)
+                                <i class="fas fa-star"
+                                   :class="[rating >= {{ $i }} ? 'text-yellow-400' : 'text-gray-300', submitting ? 'cursor-not-allowed' : 'cursor-pointer']"
+                                   @click="!submitting && submitRating({{ $i }})"
+                                   @mouseenter="rating >= {{ $i }} ? '' : $el.classList.add('text-yellow-400')"
+                                   @mouseleave="rating >= {{ $i }} ? '' : $el.classList.remove('text-yellow-400')"></i>
+                            @endfor
+                        @else
+                            @for($i = 1; $i <= 5; $i++)
+                                <i class="fa-star {{ $product->averageRating() >= $i ? 'fas text-yellow-400' : ($product->averageRating() >= $i - 0.5 ? 'fas fa-star-half-alt text-yellow-400' : 'far text-gray-300') }}"></i>
+                            @endfor
+                        @endif
+                    </div>
+                    <span class="ml-3 text-gray-500 text-sm" x-text="`(${ratingCount} Ratings | ${soldCount} Sold)`"></span>
+                </div>
+                <!-- LINE -->
+                <div class="divider my-4"></div>
+                <!-- Animated Pricing Section -->
+                @if($product->vendor)
+                    <div class="flex items-baseline mb-6 price-container">
+                        @if($product->discount > 0)
+                            <span class="text-4xl font-bold text-green-600 price-text" x-text="'₱'+totalPrice"></span>
+                            <span class="ml-3 text-gray-400 line-through text-lg original-price" x-text="pricekg"></span>
+                            <span class="ml-3 bg-green-100 text-green-600 px-2 py-1 rounded-full text-sm font-semibold discount-badge">
+                                {{ $product->discount }}% off
+                            </span>
+                        @else
+                            <span class="text-4xl font-bold text-green-600 price-text" x-text="'₱'+pricekg"></span>
+                        @endif
+                    </div>
+                @endif
+
+                @if($product->vendor)
+                    <p class="text-l text-black-700 font-semibold mb-2"><i class="fas fa-store text-green-700 text-l"></i> {{ ucfirst($product->vendor->store_name) }}</p>
+                @endif
+
+                <div class="mb-6">
+                    <h5 class="text-l font-semibold">Category:
+                        <span class="text-lg {{ $product->stock < 10 ? 'text-red-500 font-semibold' : 'text-green-700 font-semibold' }}">
+                            {{ $product->category }}
+                        </span>
+                    </h5>
+                </div>
+
+                <!-- Pack Size Options -->
+                <div class="mb-6">
+                    <span class="text-sm font-semibold text-gray-700 mr-2">Pack Size:</span>
+                    <button class="pack-size-btn text-sm" :class="{ 'active': selectedPack === 1 }" @click="selectedPack = 1">1kg</button>
+                    <button class="pack-size-btn text-sm" :class="{ 'active': selectedPack === 2 }" @click="selectedPack = 2">2kg</button>
+                    <button class="pack-size-btn text-sm" :class="{ 'active': selectedPack === 5 }" @click="selectedPack = 5">5kg</button>
+                    <input type="hidden" name="pack_size" :value="selectedPack">
+                </div>
+
+                <!-- Quantity Selector -->
+                <div class="mb-6">
+                    <p class="text-sm font-semibold mb-3 text-gray-700">Quantity:</p>
+                    <div class="flex items-center space-x-3">
+                        <button type="button" class="decrease quantity-btn px-3 py-1" @click="decreaseQty()">−</button>
+                        <input type="text" class="quantity-input text-center py-1" id="quantity-input" x-model="quantity" readonly>
+                        <button type="button" class="increase quantity-btn px-3 py-1" @click="increaseQty()">+</button>
+                        <span class="text-gray-500 text-sm ml-3">{{ $product->stock }} {{ $product->category === 'vegetables' ? 'kg' : 'units' }} available</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex space-x-4 mb-6">
+                    <button
+                        class="add-to-cart-btn action-btn"
+                        data-product-id="{{ $product->id }}"
+                        data-product-name="{{ $product->name }}"
+                        data-product-price="{{ number_format($product->price, 2, '.', '') }}"
+                        data-product-image="{{ $product->image ? asset('storage/products/' . $product->image) : asset('images/emp.jpg') }}"
+                        data-product-store="{{ $product->vendor ? $product->vendor->store_name : 'Unknown' }}"
+                        data-product-category="{{ $product->category }}"
+                        data-product-stock="{{ $product->stock }}"
+                        {{ $product->stock < 1 ? 'disabled' : '' }}>
+                        Add to Cart
+                    </button>
+                    <button
+                        class="buy-now-btn action-btn"
+                        data-product-id="{{ $product->id }}"
+                        {{ $product->stock < 1 ? 'disabled' : '' }}>
+                        Buy Now
+                    </button>
+                    <div class="flex items-center">
+                        @auth
+                            <button
+                                class="wishlist-btn p-2 px-3 py-2 {{ auth()->user()->hasInWishlist($product->id) ? 'text-red-500' : 'text-gray-400' }}"
+                                data-product-id="{{ $product->id }}"
+                                data-product-name="{{ $product->name }}"
+                                data-product-price="{{ number_format($product->price, 2, '.', '') }}"
+                                data-product-image="{{ $product->image ? asset('storage/products/' . $product->image) : asset('images/emp.jpg') }}"
+                                title="{{ auth()->user()->hasInWishlist($product->id) ? 'Remove from Wishlist' : 'Add to Wishlist' }}"
+                                data-product-stock="{{ $product->stock }}">
+                                <i class="fa-heart {{ auth()->user()->hasInWishlist($product->id) ? 'fas' : 'far' }} text-l md:text-sm"></i>
+                            </button>
+                        @else
+                            <a href="{{ route('login') }}"
+                               class="wishlist-btn p-2 rounded-full text-gray-400"
+                               title="Login to add to wishlist">
+                                <i class="far fa-heart text-xl"></i>
+                            </a>
+                        @endauth
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vendor Card -->
+        <div class="vendor-card p-6 flex flex-col md:flex-row items-center justify-between mb-12 border-2 border-green-600 rounded-2xl bg-white shadow-sm">
+            <div class="flex items-center space-x-4">
+                <div class="bg-green-100 p-4 rounded-full">
+                    <a href="{{ route('vendor.show', $product->vendor->vendor_id) }}"><i class="fas fa-store text-green-600 text-2xl"></i></a>
+                </div>
+                <div>
+                    <a href="{{ route('vendor.show', $product->vendor->vendor_id) }}">
+                    <h2 class="text-xl font-bold text-gray-800 capitalize">{{ $product->vendor->store_name }}</h2>
+                    </a>
+                    <p class="text-sm text-green-600">Freshly picked from our farms!</p>
+                </div>
+            </div>
+            <a href="{{ route('vendor.show', $product->vendor->vendor_id) }}"
+               class="mt-4 md:mt-0 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full flex items-center space-x-2 transition duration-200">
+                <i class="fas fa-store"></i>
+                <h6>View Shop!</h6>
+            </a>
+        </div>
+
+        <!-- Product Description -->
+        <div class="description-card border border-green-600">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800">Product Description</h2>
+            <p class="text-gray-600 mb-6 leading-relaxed">{{ $product->description }}</p>
+            <ul class="list-disc pl-6 text-gray-600 space-y-2">
+                <li>Freshly harvested {{ $product->name }} from local farms</li>
+                <li>Category: {{ ucfirst($product->category) }}</li>
+                <li>Weight options: 1 kg, 2 kg, 5 kg</li>
+                <li>Storage: Keep refrigerated for best freshness</li>
+                <li>Origin: {{ $product->vendor ? $product->vendor->store_name : 'Local Farm' }}</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="checkout-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">Checkout</h2>
+                <button type="button" id="close-checkout-modal" class="text-gray-600 hover:text-gray-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="mb-4">
+                <p class="text-sm font-medium text-gray-800">Customer: <span id="checkout-user">{{ auth()->user()->name ?? 'Guest' }}</span></p>
+                <p class="text-sm font-medium text-gray-800">Address: <span id="checkout-address">{{ auth()->user()->address?->address ?? 'add address' }}</span></p>
+                <p class="text-sm font-medium text-gray-800">Phone: <span id="checkout-phone">{{ auth()->user()->phone ?? 'No Phone' }}</span></p>
+                <p class="text-sm font-medium text-gray-800">Email: <span id="checkout-email">{{ auth()->user()->email ?? 'No Email' }}</span></p>
+            </div>
+            <div id="checkout-items" class="mb-4 max-h-64 overflow-y-auto">
+                <!-- Selected items will be populated here -->
+            </div>
+            <div class="border-t border-gray-200 pt-4">
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-600">Subtotal:</span>
+                    <span class="font-medium">₱<span id="checkout-subtotal">0.00</span></span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-600">Discount:</span>
+                    <span class="font-medium text-green-600">₱<span id="checkout-discount">0.00</span></span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-600">Shipping:</span>
+                    <span class="font-medium">₱<span id="checkout-shipping">0.00</span></span>
+                </div>
+                <div class="flex justify-between mb-4">
+                    <span class="text-lg font-semibold">Total:</span>
+                    <span class="text-xl font-bold text-orange-600">₱<span id="checkout-total">0.00</span></span>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                    <select id="payment_method" class="w-full border rounded p-2 text-sm mb-2">
+                        <option value="cod">Cash on Delivery</option>
+                        <option value="self_pickup">Self Pickup</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <button id="send-otp-btn" class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors mb-2">
+                        Send OTP
+                    </button>
+                    <div id="otp-section" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Enter OTP</label>
+                        <input type="text" id="otp-input" class="w-full border rounded p-2 text-sm mb-2" placeholder="Enter 6-digit OTP">
+                        <button id="verify-otp-btn" class="w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600 transition-colors">
+                            Verify OTP
+                        </button>
+                        <div id="otp-message" class="text-sm mt-2 hidden"></div>
+                    </div>
+                </div>
+                <button id="confirm-order" class="w-full bg-red-500 text-white py-2 rounded-md hover:bg-orange-600 transition-colors" disabled>
+                    Confirm Order
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- Footer -->
+    <x-footernav/>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Quantity controls
+            function setupQuantityControls() {
+                const maxStock = {{ $product->stock }};
+                const increaseBtn = document.querySelector('.increase');
+                const decreaseBtn = document.querySelector('.decrease');
+                const qtyInput = document.querySelector('#quantity-input');
+
+                qtyInput.addEventListener('change', () => {
+                    let qty = parseInt(qtyInput.value);
+                    if (isNaN(qty) || qty < 1) {
+                        qtyInput.value = 1;
+                    } else if (qty > maxStock) {
+                        qtyInput.value = maxStock;
+                    }
+                });
+            }
+
+            // Wishlist functionality
+            document.querySelectorAll('.wishlist-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    @auth
+                        const productId = this.getAttribute('data-product-id');
+                        const isInWishlist = this.classList.contains('text-red-500');
+                        const url = isInWishlist ? `/wishlist/remove/${productId}` : `/wishlist/add/${productId}`;
+                        const method = isInWishlist ? 'DELETE' : 'POST';
+
+                        this.disabled = true;
+
+                        fetch(url, {
+                            method: method,
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                const icon = this.querySelector('i');
+                                if (isInWishlist) {
+                                    this.classList.replace('text-red-500', 'text-gray-400');
+                                    icon.classList.replace('fas', 'far');
+                                    this.setAttribute('title', 'Add to Wishlist');
+                                    const event = new CustomEvent('wishlist-updated', {
+                                        detail: {
+                                            productId: productId,
+                                            action: 'removed',
+                                            countChange: -1
+                                        }
+                                    });
+                                    document.dispatchEvent(event);
+                                } else {
+                                    this.classList.replace('text-gray-400', 'text-red-500');
+                                    icon.classList.replace('far', 'fas');
+                                    this.setAttribute('title', 'Remove from Wishlist');
+                                    const event = new CustomEvent('wishlist-updated', {
+                                        detail: {
+                                            productId: productId,
+                                            action: 'added',
+                                            countChange: 1,
+                                            product: {
+                                                id: productId,
+                                                name: this.getAttribute('data-product-name'),
+                                                price: parseFloat(this.getAttribute('data-product-price')),
+                                                image: this.getAttribute('data-product-image')
+                                            }
+                                        }
+                                    });
+                                    document.dispatchEvent(event);
+                                }
+                            } else {
+                                showToast(data.message, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            showToast('An error occurred. Please try again.', 'error');
+                        })
+                        .finally(() => {
+                            this.disabled = false;
+                        });
+                    @else
+                        const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+                        loginModal.show();
+                        const feedback = document.createElement('div');
+                        feedback.className = 'alert alert-warning position-fixed top-0 start-50 translate-middle-x mt-3';
+                        feedback.style.zIndex = '1100';
+                        feedback.textContent = 'Please login to use wishlist';
+                        document.body.appendChild(feedback);
+                        setTimeout(() => {
+                            feedback.style.opacity = '0';
+                            setTimeout(() => feedback.remove(), 300);
+                        }, 3000);
+                    @endauth
+                });
+            });
+
+            // Add to cart functionality
+            document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    @auth
+                        const productId = this.getAttribute('data-product-id');
+                        const qtyInput = document.querySelector('#quantity-input');
+                        const quantity = parseInt(qtyInput.value);
+                        const packSizeInput = document.querySelector('input[name="pack_size"]');
+                        const packSize = parseInt(packSizeInput.value) || 1;
+                        this.disabled = true;
+
+                        if (isNaN(quantity) || quantity < 1) {
+                            showToast('Please select a valid quantity.', 'error');
+                            this.disabled = false;
+                            return;
+                        }
+
+                        fetch(`/cart/adds/${productId}`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ quantity: quantity, pack_size: packSize })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                const isInCart = data.message.includes('updated');
+                                const countChange = isInCart ? 0 : 1;
+
+                                const event = new CustomEvent('cart-updated', {
+                                    detail: {
+                                        productId: productId,
+                                        action: isInCart ? 'updated' : 'added',
+                                        countChange: countChange,
+                                        product: {
+                                            id: productId,
+                                            name: this.getAttribute('data-product-name'),
+                                            price: parseFloat(this.getAttribute('data-product-price')),
+                                            image: this.getAttribute('data-product-image'),
+                                            store_name: this.getAttribute('data-product-store'),
+                                            category: this.getAttribute('data-product-category'),
+                                            quantity: data.quantity,
+                                            stock: parseFloat(this.getAttribute('data-product-stock')),
+                                            pack_size: data.product.pack_size
+                                        }
+                                    }
+                                });
+                                document.dispatchEvent(event);
+                                showToast(data.message, 'success');
+                            } else {
+                                showToast(data.message, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            showToast('An error occurred. Please try again.', 'error');
+                            console.error('Error adding to cart:', error);
+                        })
+                        .finally(() => {
+                            this.disabled = false;
+                        });
+                    @else
+                        const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+                        loginModal.show();
+                        const feedback = document.createElement('div');
+                        feedback.className = 'alert alert-warning position-fixed top-0 start-50 translate-middle-x mt-3';
+                        feedback.style.zIndex = '1100';
+                        feedback.textContent = 'Please login to use cart';
+                        document.body.appendChild(feedback);
+                        setTimeout(() => {
+                            feedback.style.opacity = '0';
+                            setTimeout(() => feedback.remove(), 300);
+                        }, 3000);
+                    @endauth
+                });
+            });
+
+            // Buy Now functionality with Checkout Modal
+            const checkoutModal = document.querySelector('#checkout-modal');
+            const checkoutItems = document.querySelector('#checkout-items');
+            const checkoutSubtotal = document.querySelector('#checkout-subtotal');
+            const checkoutDiscount = document.querySelector('#checkout-discount');
+            const checkoutShipping = document.querySelector('#checkout-shipping');
+            const checkoutTotal = document.querySelector('#checkout-total');
+            const paymentMethodSelect = document.querySelector('#payment_method');
+            const confirmOrder = document.querySelector('#confirm-order');
+            const sendOtpBtn = document.querySelector('#send-otp-btn');
+            const verifyOtpBtn = document.querySelector('#verify-otp-btn');
+            const otpInput = document.querySelector('#otp-input');
+            const otpMessage = document.querySelector('#otp-message');
+            const otpSection = document.querySelector('#otp-section');
+            const closeCheckoutModal = document.querySelector('#close-checkout-modal');
+            const shippingAddress = document.querySelector('#checkout-address');
+            const shippingFee = 50.00;
+
+            function calculateCheckoutTotals(subtotal, discountPercentage) {
+                const savings = subtotal * (discountPercentage / 100);
+                const isSelfPickup = paymentMethodSelect.value === 'self_pickup';
+                const shipping = isSelfPickup ? 0 : (subtotal - savings >= 1000 ? 0 : shippingFee);
+                const total = subtotal - savings + shipping;
+
+                checkoutShipping.textContent = shipping.toFixed(2);
+                checkoutTotal.textContent = total.toFixed(2);
+
+                return { subtotal, savings, shipping, total };
+            }
+
+            function populateCheckoutModal(product, quantity, packSize, discountPercentage) {
+                const price = parseFloat(product.price);
+                const subtotal = price * quantity * packSize;
+                const totals = calculateCheckoutTotals(subtotal, discountPercentage);
+
+                checkoutItems.innerHTML = `
+                    <div class="flex justify-between mb-2">
+                        <div>
+                            <p class="text-sm font-medium text-gray-800">${product.name}</p>
+                            <p class="text-xs text-gray-500">Store: ${product.vendor.store_name}</p>
+                            <p class="text-xs text-gray-500">Pack Size: ${packSize}kg, Quantity: ${quantity}, Discount: ${discountPercentage}% OFF</p>
+                        </div>
+                        <p class="text-sm font-medium">₱${(subtotal - totals.savings).toFixed(2)}</p>
+                    </div>
+                `;
+                checkoutSubtotal.textContent = subtotal.toFixed(2);
+                checkoutDiscount.textContent = totals.savings.toFixed(2);
+
+                return {
+                    product_id: product.id,
+                    quantity: quantity,
+                    pack_size: packSize,
+                    subtotal: totals.subtotal,
+                    discount: discountPercentage, // Percentage
+                    shipping: totals.shipping,
+                    total: totals.total
+                };
+            }
+
+            document.querySelectorAll('.buy-now-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    @auth
+                        const productId = this.getAttribute('data-product-id');
+                        const qtyInput = document.querySelector('#quantity-input');
+                        const quantity = parseInt(qtyInput.value);
+                        const packSizeInput = document.querySelector('input[name="pack_size"]');
+                        const packSize = parseInt(packSizeInput.value) || 1;
+
+                        if (isNaN(quantity) || quantity < 1) {
+                            showToast('Please select a valid quantity.', 'error');
+                            return;
+                        }
+
+                        if (!shippingAddress.textContent.trim() || shippingAddress.textContent.trim() === 'add address') {
+                            showToast('Please add a shipping address in your profile.', 'error');
+                            return;
+                        }
+
+                        fetch(`/products/${productId}`, {
+                            method: 'GET',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                const product = data.product;
+                                if (!checkoutModal) {
+                                    showToast('Checkout modal not found.', 'error');
+                                    return;
+                                }
+
+                                // Populate checkout modal
+                                const orderData = populateCheckoutModal(product, quantity, packSize, parseFloat(product.discount) || 0);
+                                checkoutModal.dataset.orderData = JSON.stringify(orderData);
+
+                                // Reset OTP section
+                                if (otpSection) otpSection.classList.add('hidden');
+                                if (otpInput) otpInput.value = '';
+                                if (otpMessage) otpMessage.classList.add('hidden');
+                                if (confirmOrder) confirmOrder.disabled = true;
+
+                                // Show checkout modal
+                                checkoutModal.classList.remove('hidden');
+                                showToast('Proceeding to checkout.', 'success');
+                            } else {
+                                showToast(data.message || 'Failed to fetch product details.', 'error');
+                            }
+                        })
+                        .catch(error => {
+                            showToast('An error occurred. Please try again.', 'error');
+                            console.error('Error fetching product:', error);
+                        });
+                    @else
+                        const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+                        loginModal.show();
+                        const feedback = document.createElement('div');
+                        feedback.className = 'alert alert-warning position-fixed top-0 start-50 translate-middle-x mt-3';
+                        feedback.style.zIndex = '1100';
+                        feedback.textContent = 'Please login to buy products';
+                        document.body.appendChild(feedback);
+                        setTimeout(() => {
+                            feedback.style.opacity = '0';
+                            setTimeout(() => feedback.remove(), 300);
+                        }, 3000);
+                    @endauth
+                });
+            });
+
+            // Payment Method Change Listener
+            if (paymentMethodSelect) {
+                paymentMethodSelect.addEventListener('change', () => {
+                    const orderData = JSON.parse(checkoutModal.dataset.orderData || '{}');
+                    const subtotal = orderData.subtotal || 0;
+                    const discountPercentage = orderData.discount || 0;
+                    const totals = calculateCheckoutTotals(subtotal, discountPercentage);
+                    checkoutModal.dataset.orderData = JSON.stringify({
+                        ...orderData,
+                        shipping: totals.shipping,
+                        total: totals.total,
+                        payment_method: paymentMethodSelect.value
+                    });
+                });
+            }
+
+            // Close Modal
+            if (closeCheckoutModal) {
+                closeCheckoutModal.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    checkoutModal.classList.add('hidden');
+                    if (otpSection) otpSection.classList.add('hidden');
+                    if (otpInput) otpInput.value = '';
+                    if (otpMessage) otpMessage.classList.add('hidden');
+                    if (confirmOrder) confirmOrder.disabled = true;
+                });
+            }
+
+            if (checkoutModal) {
+                checkoutModal.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (e.target === checkoutModal) {
+                        checkoutModal.classList.add('hidden');
+                        if (otpSection) otpSection.classList.add('hidden');
+                        if (otpInput) otpInput.value = '';
+                        if (otpMessage) otpMessage.classList.add('hidden');
+                        if (confirmOrder) confirmOrder.disabled = true;
+                    }
+                });
+            }
+
+            // Send OTP
+            if (sendOtpBtn) {
+                sendOtpBtn.addEventListener('click', () => {
+                    sendOtpBtn.disabled = true;
+                    showToast('Sending OTP...', 'success');
+
+                    fetch('/otp/send', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            if (otpSection) otpSection.classList.remove('hidden');
+                            if (otpMessage) {
+                                otpMessage.classList.remove('hidden');
+                                otpMessage.classList.remove('text-red-500');
+                                otpMessage.classList.add('text-green-500');
+                                otpMessage.textContent = data.message;
+                            }
+                            showToast(data.message, 'success');
+                        } else {
+                            if (otpMessage) {
+                                otpMessage.classList.remove('hidden');
+                                otpMessage.classList.remove('text-green-500');
+                                otpMessage.classList.add('text-red-500');
+                                otpMessage.textContent = data.message;
+                            }
+                            showToast(data.message || 'Failed to send OTP.', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        if (otpMessage) {
+                            otpMessage.classList.remove('hidden');
+                            otpMessage.classList.remove('text-green-500');
+                            otpMessage.classList.add('text-red-500');
+                            otpMessage.textContent = 'An error occurred. Please try again.';
+                        }
+                        showToast('An error occurred. Please try again.', 'error');
+                        console.error('Error sending OTP:', error);
+                    })
+                    .finally(() => {
+                        sendOtpBtn.disabled = false;
+                    });
+                });
+            }
+
+            // Verify OTP
+            if (verifyOtpBtn) {
+                verifyOtpBtn.addEventListener('click', () => {
+                    const otp = otpInput.value.trim();
+                    if (!otp || otp.length !== 6) {
+                        if (otpMessage) {
+                            otpMessage.classList.remove('hidden');
+                            otpMessage.classList.remove('text-green-500');
+                            otpMessage.classList.add('text-red-500');
+                            otpMessage.textContent = 'Please enter a valid 6-digit OTP.';
+                        }
+                        showToast('Please enter a valid 6-digit OTP.', 'error');
+                        return;
+                    }
+
+                    verifyOtpBtn.disabled = true;
+                    showToast('Verifying OTP...', 'success');
+
+                    fetch('/otp/verify', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ otp: otp })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            if (otpMessage) {
+                                otpMessage.classList.remove('hidden');
+                                otpMessage.classList.remove('text-red-500');
+                                otpMessage.classList.add('text-green-500');
+                                otpMessage.textContent = data.message;
+                            }
+                            if (confirmOrder) confirmOrder.disabled = false;
+                            showToast(data.message, 'success');
+                        } else {
+                            if (otpMessage) {
+                                otpMessage.classList.remove('hidden');
+                                otpMessage.classList.remove('text-green-500');
+                                otpMessage.classList.add('text-red-500');
+                                otpMessage.textContent = data.message;
+                            }
+                            showToast(data.message || 'Invalid OTP.', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        if (otpMessage) {
+                            otpMessage.classList.remove('hidden');
+                            otpMessage.classList.remove('text-green-500');
+                            otpMessage.classList.add('text-red-500');
+                            otpMessage.textContent = 'An error occurred. Please try again.';
+                        }
+                        showToast('An error occurred. Please try again.', 'error');
+                        console.error('Error verifying OTP:', error);
+                    })
+                    .finally(() => {
+                        verifyOtpBtn.disabled = false;
+                    });
+                });
+            }
+
+            // Confirm Order
+            if (confirmOrder) {
+                confirmOrder.addEventListener('click', () => {
+                    const orderData = JSON.parse(checkoutModal.dataset.orderData || '{}');
+                    if (!orderData.product_id) {
+                        showToast('Order data is missing.', 'error');
+                        return;
+                    }
+
+                    if (!shippingAddress.textContent.trim() || shippingAddress.textContent.trim() === 'add address') {
+                        showToast('Please add a shipping address in your profile.', 'error');
+                        return;
+                    }
+
+                    confirmOrder.disabled = true;
+                    showToast('Placing order...', 'success');
+
+                    fetch('/confirm-order', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            product_id: orderData.product_id,
+                            quantity: orderData.quantity,
+                            pack_size: orderData.pack_size,
+                            subtotal: orderData.subtotal,
+                            discount: orderData.discount, // Percentage
+                            shipping: orderData.shipping,
+                            total: orderData.total,
+                            shipping_address: shippingAddress.textContent.trim(),
+                            payment_method: paymentMethodSelect.value
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            checkoutModal.classList.add('hidden');
+                            showToast(`Order placed successfully! Order ID: ${data.order_id}`, 'success');
+                            // Optionally redirect to orders page
+                            // window.location.href = '/orders';
+                        } else {
+                            showToast(data.message || 'Failed to place order.', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        showToast('An error occurred. Please try again.', 'error');
+                        console.error('Error confirming order:', error);
+                    })
+                    .finally(() => {
+                        confirmOrder.disabled = false;
+                    });
+                });
+            }
+
+            // Toast notification function
+            function showToast(message, type = 'success') {
+                const toast = document.createElement('div');
+                toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg animate-fade-in ${
+                    type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+                }`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.classList.add('animate-fade-out');
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+
+            // Initialize quantity controls
+            setupQuantityControls();
+        });
+    </script>
+</body>
+</html>

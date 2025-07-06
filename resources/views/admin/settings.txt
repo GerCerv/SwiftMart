@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Home Settings</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --secondary-color: #6b7280;
+            --accent-color: #10b981;
+            --border-color: #e5e7eb;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        body {
+            background-color: #f9fafb;
+            color: #111827;
+        }
+        
+        .settings-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .settings-header {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .settings-section {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+        
+        .settings-section:hover {
+            box-shadow: var(--card-shadow);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .section-title {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 0;
+        }
+        
+        .preview-img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 0.25rem;
+            border: 1px solid var(--border-color);
+            margin-top: 0.5rem;
+        }
+        
+        .form-card {
+            background: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+        
+        .remove-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: #ef4444;
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        .add-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+        }
+        
+        .add-btn:hover {
+            background: #0d9f6e;
+            color: white;
+        }
+        
+        .save-btn {
+            background: var(--primary-color);
+            padding: 0.5rem 1.5rem;
+            font-weight: 500;
+        }
+        
+        .alert {
+            border-radius: 0.5rem;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .remove-image-checkbox {
+            margin-top: 0.5rem;
+        }
+        
+        .vendor-select {
+            border: 2px dashed #ccc;
+            padding: 10px;
+            background-color: #f9f9f9;
+            cursor: move;
+        }
+        
+        .vendor-select:hover {
+            border-color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="settings-container">
+        <div class="settings-header">
+            <h1 class="h3 mb-0">
+                <i class="bi bi-house-gear"></i> Home Page Settings
+            </h1>
+            <p class="text-muted mb-0">Customize your home page content and layout</p>
+        </div>
+
+        @if (session('success'))
+            <div class="alert alert-success alert-dismissible fade show">
+                <i class="bi bi-check-circle-fill"></i> {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        <form action="{{ route('home-settings.update') }}" method="POST" enctype="multipart/form-data">
+            @csrf
+            @method('POST')
+
+            <!-- Carousel Section -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="bi bi-images"></i> Carousel Settings
+                    </h2>
+                    <button type="button" class="btn btn-sm add-btn" onclick="addItem('carousel')">
+                        <i class="bi bi-plus"></i> Add Slide
+                    </button>
+                </div>
+                
+                <div id="carousel-items-container">
+                    @forelse ($settings->carousel_items ?? [] as $index => $item)
+                        <div class="form-card">
+                            <button type="button" class="remove-btn" onclick="removeItem(this, 'carousel')">
+                                <i class="bi bi-x"></i>
+                            </button>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Image</label>
+                                    <input type="file" name="carousel_items[{{ $index }}][image]" class="form-control" onchange="previewImage(this)">
+                                    @if (!empty($item['image']))
+                                        <img src="{{ asset('storage/' . $item['image']) }}" class="preview-img">
+                                        <input type="hidden" name="carousel_items[{{ $index }}][existing_image]" value="{{ $item['image'] }}">
+                                        <div class="remove-image-checkbox">
+                                            <input type="checkbox" name="carousel_items[{{ $index }}][remove_image]" id="remove-carousel-{{ $index }}" onchange="toggleImagePreview(this)">
+                                            <label for="remove-carousel-{{ $index }}">Remove Image</label>
+                                        </div>
+                                    @else
+                                        <img src="" class="preview-img hidden">
+                                    @endif
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Title</label>
+                                    <input type="text" name="carousel_items[{{ $index }}][title]" 
+                                           value="{{ $item['title'] ?? '' }}" class="form-control" placeholder="Slide title">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Link URL</label>
+                                    <input type="text" name="carousel_items[{{ $index }}][link]" 
+                                           value="{{ $item['link'] ?? '#' }}" class="form-control" placeholder="https://example.com">
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="form-card">
+                            <button type="button" class="remove-btn" onclick="removeItem(this, 'carousel')">
+                                <i class="bi bi-x"></i>
+                            </button>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Image</label>
+                                    <input type="file" name="carousel_items[0][image]" class="form-control" onchange="previewImage(this)">
+                                    <img src="" class="preview-img hidden">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Title</label>
+                                    <input type="text" name="carousel_items[0][title]" class="form-control" placeholder="Slide title">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Link URL</label>
+                                    <input type="file" name="carousel_items[0][link]" class="form-control" placeholder="https://example.com">
+                                </div>
+                            </div>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- Top Vendors Section -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="bi bi-shop"></i> Top Vendors (By Delivered Orders)
+                    </h2>
+                    <button type="button" class="btn btn-sm add-btn" onclick="addItem('top_vendors')">
+                        <i class="bi bi-plus"></i> Add Top Vendor
+                    </button>
+                </div>
+                
+                <div id="top-vendors-container">
+                    @forelse ($settings->top_vendors ?? [] as $index => $vendor)
+                        <div class="form-card">
+                            <button type="button" class="remove-btn" onclick="removeItem(this, 'top_vendors')">
+                                <i class="bi bi-x"></i>
+                            </button>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Vendor Image</label>
+                                    <input type="file" name="top_vendors[{{ $index }}][image]" class="form-control" onchange="previewImage(this)">
+                                    @if (!empty($vendor['image']))
+                                        <img src="{{ asset('storage/' . $vendor['image']) }}" class="preview-img">
+                                        <input type="hidden" name="top_vendors[{{ $index }}][existing_image]" value="{{ $vendor['image'] }}">
+                                        <div class="remove-image-checkbox">
+                                            <input type="checkbox" name="top_vendors[{{ $index }}][remove_image]" id="remove-top-vendors-{{ $index }}" onchange="toggleImagePreview(this)">
+                                            <label for="remove-top-vendors-{{ $index }}">Remove Image</label>
+                                        </div>
+                                    @else
+                                        <img src="{{ asset('images/chono.jpg') }}" class="preview-img">
+                                    @endif
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Select Vendor</label>
+                                    <select name="top_vendors[{{ $index }}][store_name]" class="form-select vendor-select" onchange="previewVendor(this)">
+                                        <option value="">Select a vendor</option>
+                                        @foreach ($tvendors as $v)
+                                            <option value="{{ $v->store_name }}"
+                                                    data-delivered-count="{{ $v->delivered_count }}"
+                                                    {{ ($vendor['store_name'] ?? '') === $v->store_name ? 'selected' : '' }}>
+                                                {{ $v->store_name }} ({{ $v->delivered_count }} orders)
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <div class="vendor-preview mt-2">
+                                        <p class="mt-1">Store: <span class="vendor-store-name">{{ $vendor['store_name'] ?? '' }}</span></p>
+                                        <p>Delivered Orders: <span class="badge bg-primary vendor-delivered-count">{{ $tvendors->firstWhere('store_name', $vendor['store_name'])->delivered_count ?? 0 }}</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="form-card">
+                            <button type="button" class="remove-btn" onclick="removeItem(this, 'top_vendors')">
+                                <i class="bi bi-x"></i>
+                            </button>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Vendor Image</label>
+                                    <input type="file" name="top_vendors[0][image]" class="form-control" onchange="previewImage(this)">
+                                    <img src="{{ asset('images/chono.jpg') }}" class="preview-img">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Select Vendor</label>
+                                    <select name="top_vendors[0][store_name]" class="form-select vendor-select" onchange="previewVendor(this)">
+                                        <option value="">Select a vendor</option>
+                                        @foreach ($tvendors as $v)
+                                            <option value="{{ $v->store_name }}"
+                                                    data-delivered-count="{{ $v->delivered_count }}">
+                                                {{ $v->store_name }} ({{ $v->delivered_count }} orders)
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <div class="vendor-preview mt-2 hidden">
+                                        <p class="mt-1">Store: <span class="vendor-store-name"></span></p>
+                                        <p>Delivered Orders: <span class="badge bg-primary vendor-delivered-count"></span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- Hot Deals Section -->
+<div class="settings-section">
+    <div class="section-header">
+        <h2 class="section-title">
+            <i class="bi bi-fire"></i> Hot Deals
+        </h2>
+    </div>
+
+    <div id="hot-deals-container">
+        @php
+            $hotDeals = $settings->hot_deals ?? [];
+            $hotDeals = array_slice(array_pad($hotDeals, 3, []), 0, 3);
+        @endphp
+
+        @foreach ($hotDeals as $index => $deal)
+            @php
+                $selectedProduct = !empty($deal['product_id']) ? $products->firstWhere('id', $deal['product_id']) : null;
+                $productPrice = $selectedProduct ? $selectedProduct->price : '';
+                $productDiscount = $selectedProduct ? $selectedProduct->discount : 0;
+                $adminDiscount = $deal['discount'] ?? 0;
+                $hasProduct = !empty($selectedProduct);
+                $productImage = $selectedProduct && $selectedProduct->image ? asset('storage/products/' . $selectedProduct->image) : '';
+                $productName = $selectedProduct ? $selectedProduct->name : '';
+            @endphp
+
+            <div class="form-card mb-3">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Select Product</label>
+                        <select name="hot_deals[{{ $index }}][product_id]" class="form-select product-select" onchange="previewProduct(this)">
+                            <option value="">Select a product</option>
+                            @foreach ($products as $p)
+                                <option value="{{ $p->id }}"
+                                        data-name="{{ $p->name }}"
+                                        data-image="{{ $p->image ? asset('storage/products/' . $p->image) : '' }}"
+                                        data-price="{{ $p->price }}"
+                                        data-product-discount="{{ $p->discount ?? 0 }}"
+                                        {{ ($deal['product_id'] ?? '') == $p->id ? 'selected' : '' }}>
+                                    {{ $p->name }} (${{ $p->price }}{{ $p->discount ? ', ' . $p->discount . '%' : '' }})
+                                </option>
+                            @endforeach
+                        </select>
+
+                        <div class="product-preview mt-2 {{ !$hasProduct ? 'd-none' : '' }}">
+                            <img src="{{ $productImage }}" class="preview-img img-fluid {{ empty($productImage) ? 'd-none' : '' }}">
+                            <p class="mt-1">Name: <span class="product-name">{{ $productName }}</span></p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Price</label>
+                        <input type="text"
+                               class="form-control price-field"
+                               value="{{ $productPrice ? '$'.number_format($productPrice, 2) : '' }}"
+                               readonly>
+                        <input type="hidden" name="hot_deals[{{ $index }}][price]" value="{{ $productPrice }}">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Product Discount</label>
+                        <input type="text"
+                               class="form-control product-discount-field"
+                               value="{{ $productDiscount ? $productDiscount.'%' : '0%' }}"
+                               readonly>
+                        <input type="hidden" name="hot_deals[{{ $index }}][product_discount]" value="{{ $productDiscount }}">
+                    </div>
+                     
+                    
+                    
+                    <div class="col-md-2">
+                        <label class="form-label">Admin Discount</label>
+                        <input type="number"
+                               name="hot_deals[{{ $index }}][admin_discount]"
+                               class="form-control admin-discount-field"
+                               value="{{ $adminDiscount }}"
+                               placeholder="0"
+                               min="0"
+                               max="100">
+                    </div>
+                </div>
+            </div>
+        @endforeach
+    </div>
+</div>
+
+            <!-- Discounts Section -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="bi bi-percent"></i> Discounts
+                    </h2>
+                    <button type="button" class="btn btn-sm add-btn" onclick="addItem('discounts')">
+                        <i class="bi bi-plus"></i> Add Discount
+                    </button>
+                </div>
+                
+                <div id="discounts-container">
+                    @forelse ($settings->discounts ?? [] as $index => $discount)
+                        <div class="form-card">
+                            <button type="button" class="remove-btn" onclick="removeItem(this, 'discounts')">
+                                <i class="bi bi-x"></i>
+                            </button>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Discount Image</label>
+                                    <input type="file" name="discounts[{{ $index }}][image]" class="form-control" onchange="previewImage(this)">
+                                    @if (!empty($discount['image']))
+                                        <img src="{{ asset('storage/' . $discount['image']) }}" class="preview-img">
+                                        <input type="hidden" name="discounts[{{ $index }}][existing_image]" value="{{ $discount['image'] }}">
+                                        <div class="remove-image-checkbox">
+                                            <input type="checkbox" name="discounts[{{ $index }}][remove_image]" id="remove-discounts-{{ $index }}" onchange="toggleImagePreview(this)">
+                                            <label for="remove-discounts-{{ $index }}">Remove Image</label>
+                                        </div>
+                                    @else
+                                        <img src="" class="preview-img hidden">
+                                    @endif
+                                </div>
+                                <div class="col-md-9">
+                                    <label class="form-label">Discount Name</label>
+                                    <input type="text" name="discounts[{{ $index }}][name]" 
+                                           value="{{ $discount['name'] ?? '' }}" class="form-control" placeholder="Discount name">
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="form-card">
+                            <button type="button" class="remove-btn" onclick="removeItem(this, 'discounts')">
+                                <i class="bi bi-x"></i>
+                            </button>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Discount Image</label>
+                                    <input type="file" name="discounts[0][image]" class="form-control" onchange="previewImage(this)">
+                                    <img src="" class="preview-img hidden">
+                                </div>
+                                <div class="col-md-9">
+                                    <label class="form-label">Discount Name</label>
+                                    <input type="text" name="discounts[0][name]" class="form-control" placeholder="Discount name">
+                                </div>
+                            </div>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- Fresh Picks Section -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="bi bi-leaf"></i> Fresh Picks
+                    </h2>
+                    <button type="button" class="btn btn-sm add-btn" onclick="addItem('fresh_picks')">
+                        <i class="bi bi-plus"></i> Add Item
+                    </button>
+                </div>
+                
+                <div id="fresh-picks-container">
+                    @forelse ($settings->fresh_picks ?? [] as $index => $pick)
+                        <div class="form-card">
+                            <button type="button" class="remove-btn" onclick="removeItem(this, 'fresh_picks')">
+                                <i class="bi bi-x"></i>
+                            </button>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Item Image</label>
+                                    <input type="file" name="fresh_picks[{{ $index }}][image]" class="form-control" onchange="previewImage(this)">
+                                    @if (!empty($pick['image']))
+                                        <img src="{{ asset('storage/' . $pick['image']) }}" class="preview-img">
+                                        <input type="hidden" name="fresh_picks[{{ $index }}][existing_image]" value="{{ $pick['image'] }}">
+                                        <div class="remove-image-checkbox">
+                                            <input type="checkbox" name="fresh_picks[{{ $index }}][remove_image]" id="remove-fresh-picks-{{ $index }}" onchange="toggleImagePreview(this)">
+                                            <label for="remove-fresh-picks-{{ $index }}">Remove Image</label>
+                                        </div>
+                                    @else
+                                        <img src="" class="preview-img hidden">
+                                    @endif
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Item Name</label>
+                                    <input type="text" name="fresh_picks[{{ $index }}][name]" 
+                                           value="{{ $pick['name'] ?? '' }}" class="form-control" placeholder="Item name">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Price</label>
+                                    <input type="text" name="fresh_picks[{{ $index }}][price]" 
+                                           value="{{ $pick['price'] ?? '' }}" class="form-control" placeholder="$0.00">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Badge</label>
+                                    <input type="text" name="fresh_picks[{{ $index }}][badge]" 
+                                           value="{{ $pick['badge'] ?? '' }}" class="form-control" placeholder="e.g., New">
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="form-card">
+                            <button type="button" class="remove-btn" onclick="removeItem(this, 'fresh_picks')">
+                                <i class="bi bi-x"></i>
+                            </button>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Item Image</label>
+                                    <input type="file" name="fresh_picks[0][image]" class="form-control" onchange="previewImage(this)">
+                                    <img src="" class="preview-img hidden">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Item Name</label>
+                                    <input type="text" name="fresh_picks[0][name]" class="form-control" placeholder="Item name">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Price</label>
+                                    <input type="text" name="fresh_picks[0][price]" class="form-control" placeholder="$0.00">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Badge</label>
+                                    <input type="text" name="fresh_picks[0][badge]" class="form-control" placeholder="e.g., New">
+                                </div>
+                            </div>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- Promotional Section -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="bi bi-megaphone"></i> Promotional Section
+                    </h2>
+                </div>
+                
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Title</label>
+                        <input type="text" name="promotional_section[title]" 
+                               value="{{ $settings->promotional_section['title'] ?? '' }}" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Description</label>
+                        <textarea name="promotional_section[description]" class="form-control" rows="2">{{ $settings->promotional_section['description'] ?? '' }}</textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Link URL</label>
+                        <input type="text" name="promotional_section[link]" 
+                               value="{{ $settings->promotional_section['link'] ?? '#' }}" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Discount Banner -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="bi bi-tag"></i> Discount Banner
+                    </h2>
+                </div>
+                
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Banner Image</label>
+                        <input type="file" name="discount_banner[image]" class="form-control" onchange="previewImage(this)">
+                        @if (!empty($settings->discount_banner['image']))
+                            <img src="{{ asset('storage/' . $settings->discount_banner['image']) }}" class="preview-img">
+                            <input type="hidden" name="discount_banner[existing_image]" value="{{ $settings->discount_banner['image'] }}">
+                            <div class="remove-image-checkbox">
+                                <input type="checkbox" name="discount_banner[remove_image]" id="remove-discount-banner" onchange="toggleImagePreview(this)">
+                                <label for="remove-discount-banner">Remove Image</label>
+                            </div>
+                        @else
+                            <img src="" class="preview-img hidden">
+                        @endif
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Title</label>
+                        <input type="text" name="discount_banner[title]" 
+                               value="{{ $settings->discount_banner['title'] ?? '' }}" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Link URL</label>
+                        <input type="text" name="discount_banner[link]" 
+                               value="{{ $settings->discount_banner['link'] ?? '#' }}" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end mt-4">
+                <button type="submit" class="btn save-btn">
+                    <i class="bi bi-save"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Track item counts for each section
+        const itemCounts = {
+            carousel: {{ count($settings->carousel_items ?? []) }},
+            top_vendors: {{ count($settings->top_vendors ?? []) }},
+            hot_deals: {{ count($settings->hot_deals ?? []) }},
+            discounts: {{ count($settings->discounts ?? []) }},
+            fresh_picks: {{ count($settings->fresh_picks ?? []) }},
+        };
+
+        // Ensure at least one item exists for each section
+        if (itemCounts.carousel === 0) itemCounts.carousel = 1;
+        if (itemCounts.top_vendors === 0) itemCounts.top_vendors = 1;
+        if (itemCounts.hot_deals === 0) itemCounts.hot_deals = 1;
+        if (itemCounts.discounts === 0) itemCounts.discounts = 1;
+        if (itemCounts.fresh_picks === 0) itemCounts.fresh_picks = 1;
+
+        // Add new item to a section
+        function addItem(section) {
+            const containerId = section === 'top_vendors' ? 'top-vendors-container' : `${section}-items-container`;
+            const container = document.getElementById(containerId);
+            const index = itemCounts[section]++;
+            
+            let html = '';
+            
+            switch(section) {
+                case 'carousel':
+                    html = `
+                    <div class="form-card">
+                        <button type="button" class="remove-btn" onclick="removeItem(this, '${section}')">
+                            <i class="bi bi-x"></i>
+                        </button>
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Image</label>
+                                <input type="file" name="${section}_items[${index}][image]" class="form-control" onchange="previewImage(this)">
+                                <img src="" class="preview-img hidden">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Title</label>
+                                <input type="text" name="${section}_items[${index}][title]" class="form-control" placeholder="Slide title">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Link URL</label>
+                                <input type="text" name="${section}_items[${index}][link]" class="form-control" placeholder="https://example.com">
+                            </div>
+                        </div>
+                    </div>`;
+                    break;
+                    
+                case 'top_vendors':
+                    const tvendors = @json($tvendors->map(fn($v) => ['store_name' => $v->store_name, 'delivered_count' => $v->delivered_count]));
+                    let options = '<option value="">Select a vendor</option>';
+                    tvendors.forEach(v => {
+                        options += `<option value="${v.store_name}" data-delivered-count="${v.delivered_count}">${v.store_name} (${v.delivered_count} orders)</option>`;
+                    });
+
+                    html = `
+                    <div class="form-card">
+                        <button type="button" class="remove-btn" onclick="removeItem(this, 'top_vendors')">
+                            <i class="bi bi-x"></i>
+                        </button>
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Vendor Image</label>
+                                <input type="file" name="top_vendors[${index}][image]" class="form-control" onchange="previewImage(this)">
+                                <img src="${'{{ asset('images/chono.jpg') }}'}" class="preview-img">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Select Vendor</label>
+                                <select name="top_vendors[${index}][store_name]" class="form-select vendor-select" onchange="previewVendor(this)">
+                                    ${options}
+                                </select>
+                                <div class="vendor-preview mt-2 hidden">
+                                    <p class="mt-1">Store: <span class="vendor-store-name"></span></p>
+                                    <p>Delivered Orders: <span class="badge bg-primary vendor-delivered-count"></span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                    break;
+                    
+                case 'hot_deals':
+                    html = `
+                    <div class="form-card">
+                        <button type="button" class="remove-btn" onclick="removeItem(this, '${section}')">
+                            <i class="bi bi-x"></i>
+                        </button>
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Product Image</label>
+                                <input type="file" name="hot_deals[${index}][image]" class="form-control" onchange="previewImage(this)">
+                                <img src="" class="preview-img hidden">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Product Name</label>
+                                <input type="text" name="hot_deals[${index}][name]" class="form-control" placeholder="Product name">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Price</label>
+                                <input type="text" name="hot_deals[${index}][price]" class="form-control" placeholder="$0.00">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Discount</label>
+                                <input type="text" name="hot_deals[${index}][discount]" class="form-control" placeholder="10%">
+                            </div>
+                        </div>
+                    </div>`;
+                    break;
+
+                case 'discounts':
+                    html = `
+                    <div class="form-card">
+                        <button type="button" class="remove-btn" onclick="removeItem(this, '${section}')">
+                            <i class="bi bi-x"></i>
+                        </button>
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Discount Image</label>
+                                <input type="file" name="discounts[${index}][image]" class="form-control" onchange="previewImage(this)">
+                                <img src="" class="preview-img hidden">
+                            </div>
+                            <div class="col-md-9">
+                                <label class="form-label">Discount Name</label>
+                                <input type="text" name="discounts[${index}][name]" class="form-control" placeholder="Discount name">
+                            </div>
+                        </div>
+                    </div>`;
+                    break;
+
+                case 'fresh_picks':
+                    html = `
+                    <div class="form-card">
+                        <button type="button" class="remove-btn" onclick="removeItem(this, '${section}')">
+                            <i class="bi bi-x"></i>
+                        </button>
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Item Image</label>
+                                <input type="file" name="fresh_picks[${index}][image]" class="form-control" onchange="previewImage(this)">
+                                <img src="" class="preview-img hidden">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Item Name</label>
+                                <input type="text" name="fresh_picks[${index}][name]" class="form-control" placeholder="Item name">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Price</label>
+                                <input type="text" name="fresh_picks[${index}][price]" class="form-control" placeholder="$0.00">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Badge</label>
+                                <input type="text" name="fresh_picks[${index}][badge]" class="form-control" placeholder="e.g., New">
+                            </div>
+                        </div>
+                    </div>`;
+                    break;
+            }
+            
+            container.insertAdjacentHTML('beforeend', html);
+        }
+
+        // Remove item from a section
+        function removeItem(button, section) {
+            const card = button.closest('.form-card');
+            if (card) {
+                const container = card.parentElement;
+                if (container.querySelectorAll('.form-card').length > 1) {
+                    card.remove();
+                    itemCounts[section]--;
+                } else {
+                    alert('You must have at least one item in this section.');
+                }
+            }
+        }
+
+        // Preview image when selected
+        function previewImage(input) {
+            const preview = input.nextElementSibling;
+            const removeCheckbox = preview.nextElementSibling?.nextElementSibling?.querySelector('input[type="checkbox"]');
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    if (removeCheckbox) {
+                        removeCheckbox.checked = false;
+                    }
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Preview vendor when selected
+        function previewVendor(select) {
+            const preview = select.closest('.col-md-3').querySelector('.vendor-preview');
+            const storeNameSpan = preview.querySelector('.vendor-store-name');
+            const deliveredCountSpan = preview.querySelector('.vendor-delivered-count');
+            const selectedOption = select.options[select.selectedIndex];
+
+            if (select.value) {
+                preview.classList.remove('hidden');
+                storeNameSpan.textContent = select.value;
+                deliveredCountSpan.textContent = selectedOption.dataset.deliveredCount || '0';
+            } else {
+                preview.classList.add('hidden');
+                storeNameSpan.textContent = '';
+                deliveredCountSpan.textContent = '';
+            }
+        }
+
+        // Toggle image preview when remove checkbox is toggled
+        function toggleImagePreview(checkbox) {
+            const preview = checkbox.closest('.col-md-3, .col-md-4').querySelector('.preview-img');
+            if (checkbox.checked) {
+                preview.classList.add('hidden');
+            } else if (preview.src && !preview.src.endsWith('hidden')) {
+                preview.classList.remove('hidden');
+            }
+        }
+
+        // Initialize preview images for existing items
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.preview-img').forEach(img => {
+                if (img.src && !img.src.endsWith('hidden')) {
+                    img.classList.remove('hidden');
+                }
+            });
+        });
+
+
+        function previewProduct(select) {
+    const container = select.closest('.form-card');
+    const preview = container.querySelector('.product-preview');
+    const imgPreview = preview.querySelector('.preview-img');
+    const namePreview = preview.querySelector('.product-name');
+
+    const priceInput = container.querySelector('.price-field');
+    const priceHidden = container.querySelector('input[name*="[price]"]');
+    const productDiscountInput = container.querySelector('.product-discount-field');
+    const productDiscountHidden = container.querySelector('input[name*="[product_discount]"]');
+    const adminDiscountInput = container.querySelector('.admin-discount-field');
+
+    const selectedOption = select.options[select.selectedIndex];
+    const hasSelection = select.value !== '';
+
+    // Toggle preview visibility
+    preview.classList.toggle('d-none', !hasSelection);
+
+    if (hasSelection) {
+        namePreview.textContent = selectedOption.dataset.name || '';
+
+        if (selectedOption.dataset.image) {
+            imgPreview.src = selectedOption.dataset.image;
+            imgPreview.classList.remove('d-none');
+        } else {
+            imgPreview.classList.add('d-none');
+        }
+
+        const price = selectedOption.dataset.price || '0';
+        priceInput.value = '$' + parseFloat(price).toFixed(2);
+        priceHidden.value = price;
+
+        const productDiscount = selectedOption.dataset.productDiscount || '0';
+        productDiscountInput.value = productDiscount + '%';
+        productDiscountHidden.value = productDiscount;
+
+        // Ensure admin discount is never empty — set to 0 if missing
+        if (adminDiscountInput.value === '') {
+            adminDiscountInput.value = '0';
+        }
+    } else {
+        namePreview.textContent = '';
+        imgPreview.src = '';
+        imgPreview.classList.add('d-none');
+        priceInput.value = '';
+        priceHidden.value = '';
+        productDiscountInput.value = '0%';
+        productDiscountHidden.value = '0';
+        adminDiscountInput.value = '0';
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.product-select').forEach(select => {
+        previewProduct(select);
+    });
+});
+    </script>
+</body>
+</html>

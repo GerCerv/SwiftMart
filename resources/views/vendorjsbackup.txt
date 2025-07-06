@@ -1,0 +1,248 @@
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize charts and other functionality
+    // ... (keep your existing chart initialization code) ...
+
+    // Function to keep products tab active
+    function activateProductsTab() {
+        $('.nav-link[href="#products"]').addClass('active').attr('aria-selected', 'true');
+        $('.tab-pane').removeClass('show active');
+        $('#products').addClass('show active');
+    }
+
+    // AJAX Pagination for Products
+    $(document).on('click', '#pagination-container a', function(e) {
+        e.preventDefault();
+        var url = $(this).attr('href');
+        
+        // Show loading indicator
+        $('#products-table-body').html(`
+            <tr>
+                <td colspan="8" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </td>
+            </tr>
+        `);
+        
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                // Parse the response
+                var $response = $(response);
+                
+                // Update the table body
+                $('#products-table-body').html($response.find('#products-table-body').html());
+                
+                // Update pagination links
+                $('#pagination-container').html($response.find('#pagination-container').html());
+                
+                // Keep products tab active
+                activateProductsTab();
+                
+                // Reinitialize event handlers
+                initializeProductHandlers();
+            },
+            error: function() {
+                $('#products-table-body').html(`
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-danger">
+                            Error loading products. Please try again.
+                        </td>
+                    </tr>
+                `);
+            }
+        });
+    });
+
+    // Handle edit button click
+    $(document).on('click', '.edit-product-btn', function() {
+        const productId = $(this).data('id');
+        
+        // Show loading state
+        $('#editFormContent').html(`
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        `);
+        
+        // Fetch product data
+        $.get(`/vendor/products/${productId}/edit`, function(response) {
+            // Populate form with response
+            $('#editFormContent').html(response);
+            
+            // Update form action
+            $('#editProductForm').attr('action', `/vendor/products/${productId}`);
+            
+            // Show modal
+            $('#editModal').modal('show');
+        }).fail(function() {
+            $('#editFormContent').html(`
+                <div class="alert alert-danger">
+                    Error loading product data. Please try again.
+                </div>
+            `);
+        });
+    });
+
+    // Handle edit form submission
+    $(document).on('submit', '.edit-product-form', function(e) {
+    e.preventDefault();
+    const form = this;
+    const productId = $(this).data('id');
+    const formData = new FormData(form);
+
+    $.ajax({
+        url: form.action,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+            'X-HTTP-Method-Override': 'PUT'
+        },
+        success: function(response) {
+            $(`#editModal${productId}`).modal('hide');
+            showToast('Product updated successfully!');
+            reloadProductsTable();
+            activateProductsTab();
+        },
+        error: function(xhr) {
+            let errorMessage = 'Error updating product';
+            if (xhr.responseJSON && xhr.responseJSON.errors) {
+                errorMessage = Object.values(xhr.responseJSON.errors).join('<br>');
+            }
+            showToast(errorMessage, 'error');
+        }
+    });
+});
+
+    // Handle add product form submission
+    $('#addProductModal form').on('submit', function(e) {
+        e.preventDefault();
+        const form = this;
+        const formData = new FormData(form);
+        
+        $.ajax({
+            url: form.action,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                $('#addProductModal').modal('hide');
+                form.reset(); // Clear the form
+                showToast('Product added successfully!');
+                reloadProductsTable();
+                activateProductsTab(); // Ensure we stay on products tab
+            },
+            error: function(xhr) {
+                let errorMessage = 'Error adding product';
+                if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    errorMessage = Object.values(xhr.responseJSON.errors).join('<br>');
+                }
+                showToast(errorMessage, 'error');
+            }
+        });
+    });
+
+    // Function to reload products table
+    function reloadProductsTable() {
+        const currentPage = $('#pagination-container .page-item.active a').attr('href') || window.location.href;
+        
+        $.ajax({
+            url: currentPage,
+            type: 'GET',
+            success: function(response) {
+                const $response = $(response);
+                $('#products-table-body').html($response.find('#products-table-body').html());
+                $('#pagination-container').html($response.find('#pagination-container').html());
+                initializeProductHandlers();
+            },
+            error: function() {
+                showToast('Error reloading products', 'error');
+            }
+        });
+    }
+
+    // Show toast notification
+    function showToast(message, type = 'success') {
+        const toastEl = document.getElementById('liveToast');
+        if (!toastEl) return;
+        
+        const toastBody = toastEl.querySelector('.toast-body');
+        toastBody.textContent = message;
+        
+        // Update toast appearance based on type
+        const toastHeader = toastEl.querySelector('.toast-header');
+        toastHeader.className = 'toast-header';
+        toastHeader.classList.add(type === 'success' ? 'bg-success' : 'bg-danger');
+        toastHeader.classList.add('text-white');
+        
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+    }
+
+    // Initialize product handlers
+    function initializeProductHandlers() {
+        // Status change handler
+        $('.status-form .form-select-sm').off('change').on('change', function(e) {
+            e.preventDefault(); // prevent default submission
+            const form = $(this).closest('form');
+
+            $.ajax({
+                url: form.attr('action'),
+                type: 'POST',
+                data: form.serialize(),
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'X-HTTP-Method-Override': 'PATCH'
+                },
+                success: function() {
+                    showToast('Status updated successfully');
+                    activateProductsTab(); // ✅ keep My Products tab active
+                    reloadProductsTable(); // optional if you want to refresh
+                },
+                error: function() {
+                    showToast('Error updating status', 'error');
+                }
+            });
+        });
+
+        
+        // Delete confirmation handler
+        $('.btn-outline-danger').off('click').on('click', function(e) {
+            e.preventDefault();
+            if (confirm('Are you sure?')) {
+                const form = $(this).closest('form');
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: form.serialize(),
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'X-HTTP-Method-Override': 'DELETE'
+                    },
+                    success: function() {
+                        showToast('Product deleted successfully');
+                        reloadProductsTable();
+                        activateProductsTab();
+                    },
+                    error: function() {
+                        showToast('Error deleting product', 'error');
+                    }
+                });
+            }
+        });
+    }
+    
+    // Initialize handlers on page load
+    initializeProductHandlers();
+});

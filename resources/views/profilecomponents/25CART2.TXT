@@ -1,0 +1,821 @@
+@php
+    use Illuminate\Support\Facades\Auth;
+
+    $cartItems = Auth::user()->cart()->with('product.vendor')->get();
+    $userName = Auth::user()->name; // Get user name
+@endphp
+
+@if($cartItems->isEmpty())
+    <div class="bg-white rounded-lg shadow p-8 text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+        <h2 class="text-xl font-medium text-gray-700 mt-4">Your cart is empty</h2>
+        <p class="text-gray-500 mt-2">Start shopping to add items to your cart</p>
+        <a href="/products" class="mt-6 inline-block px-6 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors">
+            Browse Products
+        </a>
+    </div>
+@else
+    <form id="cart-form" class="bg-white rounded-lg shadow overflow-hidden">
+        @csrf
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr class="text-left text-gray-600">
+                        <th class="px-6 py-4 w-12">
+                            <input type="checkbox" id="select-all" class="rounded text-orange-500 focus:ring-orange-500">
+                        </th>
+                        <th class="px-6 py-4 font-medium">Product</th>
+                        <th class="px-6 py-4 font-medium">Unit Price</th>
+                        <th class="px-6 py-4 font-medium">Quantity</th>
+                        <th class="px-6 py-4 font-medium">Variations</th>
+                        <th class="px-6 py-4 font-medium">Total Price</th>
+                        <th class="px-6 py-4 font-medium">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    @foreach($cartItems as $item)
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4">
+                                <input type="checkbox" class="select-item rounded text-orange-500 focus:ring-orange-500" 
+                                       data-id="{{ $item->product_id }}">
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center space-x-4">
+                                    <a href="{{ route('product.show', $item->product_id) }}">
+                                    <img src="{{ $item->product->image ? asset('storage/products/' . $item->product->image) : asset('images/emp.jpg') }}" 
+                                         class="w-20 h-20 object-cover rounded-lg border border-gray-200">
+                                    </a>
+                                    <div>
+                                        <div class="font-medium text-gray-900">{{ $item->product->name }}</div>
+                                        <div class="text-sm text-gray-500">Vendor: {{ $item->product->vendor->name ?? 'N/A' }}</div>
+                                        <div class="text-sm text-gray-500">Store: {{ $item->product->vendor->store_name ?? 'N/A' }}</div>
+                                        <div class="text-sm text-gray-500">Category: {{ $item->product->category }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-gray-900">
+                                <div>
+                                ₱<span class="unit-price" data-id="{{ $item->product_id }}">{{ number_format($item->product->price, 2) }}</span>
+                                </div>
+                                @if ($item->product->discount > 0)
+                                    <span class="item-discount text-success text-green-900 bg-green-200 font-semibold rounded-full px-1 py-1 text-xs" data-id="{{ $item->product_id }}">
+                                        {{ $item->product->discount }}% OFF
+                                    </span>
+                                @else
+                                    <span style="display: none;" class="item-discount text-error text-red-800 bg-red-200 font-semibold rounded-full px-2 py-1" data-id="{{ $item->product_id }}">
+                                        No Discount
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 align center">
+                                <div class="flex items-center">
+                                    <button type="button" class="decrease px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded-l-md transition-colors" 
+                                            data-id="{{ $item->product_id }}">−</button>
+                                    <input type="text" class="w-12 text-center quantity border-t border-b border-gray-200 py-1 " readonly
+                                           data-id="{{ $item->product_id }}" value="{{ $item->quantity }}">
+                                    <button type="button" class="increase px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded-r-md transition-colors" 
+                                            data-id="{{ $item->product_id }}">+</button>
+                                </div>
+                                <span class="text-gray-500 text-sm ">{{ $item->product->stock }} {{ $item->product->category === 'vegetables' ? 'kg' : 'units' }} available</span>
+                            </td>
+                            <td class="px-6 py-4 text-gray-900 font-medium">
+                                <div>
+                                <span class="text-sm text-gray-700">Pack Size:</span>
+                                </div>
+                                <button type="button" class="pack-size-btn text-sm {{ $item->pack_size == 1 ? 'active' : '' }}" 
+                                        data-id="{{ $item->product_id }}" data-pack-size="1">1kg</button>
+                                <button type="button" class="pack-size-btn text-sm {{ $item->pack_size == 2 ? 'active' : '' }}" 
+                                        data-id="{{ $item->product_id }}" data-pack-size="2">2kg</button>
+                                <button type="button" class="pack-size-btn text-sm {{ $item->pack_size == 5 ? 'active' : '' }}" 
+                                        data-id="{{ $item->product_id }}" data-pack-size="5">5kg</button>
+                                <input type="hidden" class="pack-size-input" data-id="{{ $item->product_id }}" value="{{ $item->pack_size ?? 1 }}">
+                            </td>
+                            <td class="px-6 py-4 text-gray-900 font-medium">
+                                ₱<span class="item-total" data-id="{{ $item->product_id }}">
+                                    {{ number_format($item->product->price * (1 - $item->product->discount / 100) * $item->quantity * ($item->pack_size ?? 1), 2) }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <button type="button" class="delete-btn text-red-600 hover:text-red-800 transition-colors" 
+                                        data-id="{{ $item->product_id }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Cart Summary -->
+        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+            <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                <div class="flex items-center space-x-4">
+                    <input type="checkbox" id="select-all-bottom" class="rounded text-orange-500 focus:ring-orange-500">
+                    <label for="select-all-bottom" class="text-gray-700">Select All</label>
+                    <button type="button" class="delete-selected text-red-600 hover:text-red-800 transition-colors flex items-center space-x-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        <span>Delete Selected</span>
+                    </button>
+                </div>
+                
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-gray-600">Subtotal:</span>
+                    <span class="font-medium">₱<span id="subtotal-price">0.00</span></span>
+                </div>
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-gray-600">Shipping:</span>
+                    <span class="font-medium">₱<span id="shipping-fee">0.00</span></span>
+                </div>
+                <div class="mb-2">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-lg font-semibold">Total:</span>
+                        <span class="text-xl font-bold text-orange-600">₱<span id="total-price">0.00</span></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Total Savings:</span>
+                        <span class="font-medium text-green-600">₱<span id="total-savings">0.00</span></span>
+                    </div>
+                </div>
+                
+                <button type="button" class="checkout-button" id="open-checkout-modal">
+                    Proceed to Checkout
+                </button>
+            </div>
+        </div>
+
+        <!-- Checkout Modal -->
+        <div id="checkout-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+            <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">Checkout</h2>
+                    <button type="button" id="close-checkout-modal" class="text-gray-600 hover:text-gray-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="mb-4">
+                    <p class="text-sm font-medium text-gray-800">Customer: <span id="checkout-user">{{ $userName }}</span></p>
+                    <p class="text-sm font-medium text-gray-800">Address: <span id="checkout-address">123 Green St, Veggie Town, Philippines</span></p>
+                </div>
+                <div id="checkout-items" class="mb-4 max-h-64 overflow-y-auto">
+                    <!-- Selected items will be populated here -->
+                </div>
+                <div class="border-t border-gray-200 pt-4">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-gray-600">Subtotal:</span>
+                        <span class="font-medium">₱<span id="checkout-subtotal">0.00</span></span>
+                    </div>
+                    <div class="flex justify-between mb-2">
+                        <span class="text-gray-600">Discount:</span>
+                        <span class="font-medium text-green-600">₱<span id="checkout-discount">0.00</span></span>
+                    </div>
+                    <div class="flex justify-between mb-2">
+                        <span class="text-gray-600">Shipping:</span>
+                        <span class="font-medium">₱<span id="checkout-shipping">0.00</span></span>
+                    </div>
+                    <div class="flex justify-between mb-4">
+                        <span class="text-lg font-semibold">Total:</span>
+                        <span class="text-xl font-bold text-orange-600">₱<span id="checkout-total">0.00</span></span>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                        <div class="flex items-center">
+                            <input type="radio" id="cod" name="payment_method" value="cod" checked class="mr-2 text-orange-500 focus:ring-orange-500" disabled>
+                            <label for="cod" class="text-sm text-gray-700">Cash on Delivery</label>
+                        </div>
+                    </div>
+                    <button id="confirm-order" class="w-full bg-red-500 text-white py-2 rounded-md hover:bg-orange-600 transition-colors">
+                        Confirm Order
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+@endif
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const checkboxes = document.querySelectorAll(".select-item");
+        const selectAll = document.getElementById("select-all");
+        const selectAllBottom = document.getElementById("select-all-bottom");
+        const subtotalDisplay = document.getElementById("subtotal-price");
+        const shippingDisplay = document.getElementById("shipping-fee");
+        const totalPriceDisplay = document.getElementById("total-price");
+        const totalSavingsDisplay = document.getElementById("total-savings");
+        const shippingFee = 50.00; // Fixed shipping fee for demo
+
+        function calculateTotals() {
+            let subtotal = 0;
+            let totalSavings = 0;
+            let selectedCount = 0;
+
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    const row = checkbox.closest("tr");
+                    const unitPrice = parseFloat(row.querySelector(".unit-price").textContent.replace(/[₱,]/g, ""));
+                    const quantity = parseInt(row.querySelector(".quantity").value);
+                    const discountText = row.querySelector(".item-discount").textContent;
+                    const discountPercentage = discountText.includes("No Discount")
+                        ? 0
+                        : parseFloat(discountText.match(/\d+(\.\d+)?/)[0]);
+                    const packSize = parseInt(row.querySelector(".pack-size-input").value) || 1;
+
+                    // Calculate original total (without discount)
+                    const originalTotal = unitPrice * quantity * packSize;
+                    // Calculate savings for this item
+                    const savings = discountPercentage > 0
+                        ? (discountPercentage / 100) * originalTotal
+                        : 0;
+                    // Calculate discounted total
+                    const discountedTotal = originalTotal - savings;
+
+                    subtotal += discountedTotal;
+                    totalSavings += savings;
+                    selectedCount++;
+                }
+            });
+
+            // Calculate shipping (free shipping for orders over 1000)
+            const shipping = selectedCount > 0 ? (subtotal >= 1000 ? 0 : shippingFee) : 0;
+            const total = subtotal + shipping;
+
+            subtotalDisplay.textContent = subtotal.toFixed(2);
+            shippingDisplay.textContent = shipping.toFixed(2);
+            totalPriceDisplay.textContent = total.toFixed(2);
+            totalSavingsDisplay.textContent = totalSavings.toFixed(2);
+
+            return { subtotal, shipping, total, totalSavings, selectedCount };
+        }
+
+        // Select All functionality
+        function toggleSelectAll(checked) {
+            checkboxes.forEach(cb => cb.checked = checked);
+            selectAll.checked = checked;
+            selectAllBottom.checked = checked;
+            calculateTotals();
+        }
+
+        selectAll.addEventListener("change", () => toggleSelectAll(selectAll.checked));
+        selectAllBottom.addEventListener("change", () => toggleSelectAll(selectAllBottom.checked));
+
+        // Individual checkbox changes
+        checkboxes.forEach(cb => cb.addEventListener("change", () => {
+            const allChecked = [...checkboxes].every(cb => cb.checked);
+            selectAll.checked = allChecked;
+            selectAllBottom.checked = allChecked;
+            calculateTotals();
+        }));
+
+        // Quantity controls
+        function setupQuantityControls() {
+            document.querySelectorAll(".increase").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const id = btn.dataset.id;
+                    const qtyInput = document.querySelector(`.quantity[data-id="${id}"]`);
+                    qtyInput.value = parseInt(qtyInput.value) + 1;
+                    updateQuantity(id, qtyInput.value);
+                });
+            });
+
+            document.querySelectorAll(".decrease").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const id = btn.dataset.id;
+                    const qtyInput = document.querySelector(`.quantity[data-id="${id}"]`);
+                    if (parseInt(qtyInput.value) > 1) {
+                        qtyInput.value = parseInt(qtyInput.value) - 1;
+                        updateQuantity(id, qtyInput.value);
+                    }
+                });
+            });
+
+            document.querySelectorAll(".quantity").forEach(input => {
+                input.addEventListener("change", () => {
+                    const id = input.dataset.id;
+                    if (parseInt(input.value) < 1) input.value = 1;
+                    updateQuantity(id, input.value);
+                });
+            });
+        }
+
+        // New function to update pack size
+        function updatePackSize(productId, packSize) {
+            const packSizeInput = document.querySelector(`.pack-size-input[data-id="${productId}"]`);
+            const buttons = document.querySelectorAll(`.pack-size-btn[data-id="${productId}"]`);
+
+            fetch(`/cart/update-pack-size/${productId}`, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                },
+                body: JSON.stringify({ pack_size: packSize })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Update hidden input and button styles
+                    packSizeInput.value = packSize;
+                    buttons.forEach(btn => {
+                        if (parseInt(btn.dataset.packSize) === packSize) {
+                            btn.classList.add('active');
+                        } else {
+                            btn.classList.remove('active');
+                        }
+                    });
+
+                    // Update item total
+                    const unitPrice = parseFloat(document.querySelector(`.unit-price[data-id="${productId}"]`).textContent.replace(/[₱,]/g, ""));
+                    const quantity = parseInt(document.querySelector(`.quantity[data-id="${productId}"]`).value);
+                    const discountText = document.querySelector(`.item-discount[data-id="${productId}"]`).textContent;
+                    const discountPercentage = discountText.includes("No Discount")
+                        ? 0
+                        : parseFloat(discountText.match(/\d+(\.\d+)?/)[0]);
+                    const discountedUnitPrice = unitPrice * (1 - discountPercentage / 100);
+                    const newTotal = discountedUnitPrice * quantity * packSize;
+
+                    document.querySelector(`.item-total[data-id="${productId}"]`).textContent = newTotal.toFixed(2);
+                    calculateTotals();
+                    showToast("Pack size updated");
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+
+        // Setup pack size controls
+        function setupPackSizeControls() {
+            document.querySelectorAll(".pack-size-btn").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const id = btn.dataset.id;
+                    const packSize = parseInt(btn.dataset.packSize);
+                    updatePackSize(id, packSize);
+                });
+            });
+        }
+
+        function checkIfCartIsEmpty() {
+            const tbody = document.querySelector("tbody");
+            const cartForm = document.getElementById("cart-form");
+
+            if (tbody.children.length === 0) {
+                cartForm.style.display = "none";
+
+                const emptyCartMessage = `
+                    <div class="bg-white rounded-lg shadow p-8 text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 
+                                0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <h2 class="text-xl font-medium text-gray-700 mt-4">Your cart is empty</h2>
+                        <p class="text-gray-500 mt-2">Start shopping to add items to your cart</p>
+                        <a href="/products" class="mt-6 inline-block px-6 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors">
+                            Browse Products
+                        </a>
+                    </div>
+                `;
+
+                cartForm.insertAdjacentHTML("afterend", emptyCartMessage);
+            }
+        }
+
+        function updateQuantity(productId, quantity) {
+            fetch(`/cart/update-quantity/${productId}`, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                },
+                body: JSON.stringify({ quantity })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const unitPrice = parseFloat(document.querySelector(`.unit-price[data-id="${productId}"]`).textContent.replace(/[₱,]/g, ""));
+                    const discountText = document.querySelector(`.item-discount[data-id="${productId}"]`).textContent;
+                    const discountPercentage = discountText.includes("No Discount")
+                        ? 0
+                        : parseFloat(discountText.match(/\d+(\.\d+)?/)[0]);
+                    const packSize = parseInt(document.querySelector(`.pack-size-input[data-id="${productId}"]`).value) || 1;
+                    const discountedUnitPrice = unitPrice * (1 - discountPercentage / 100);
+                    const newTotal = discountedUnitPrice * data.quantity * packSize;
+
+                    document.querySelector(`.item-total[data-id="${productId}"]`).textContent = newTotal.toFixed(2);
+                    calculateTotals();
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+
+        function removeFromCartPopup(productId) {
+            const item = document.querySelector(`#cartPopup .cart-items [data-cart-item="${productId}"]`);
+            if (item) {
+                item.remove();
+                const badge = document.querySelector('#cartIcon .badge');
+                const currentCount = parseInt(badge ? badge.textContent : 0) || 0;
+                if (badge) {
+                    const newCount = currentCount - 1;
+                    badge.textContent = newCount;
+                    if (newCount <= 0) {
+                        badge.remove();
+                        document.querySelector('#cartIcon i').classList.remove('text-#198754-500');
+                    }
+                }
+                const cartItemsContainer = document.querySelector('#cartPopup .cart-items');
+                const remainingItems = cartItemsContainer.querySelectorAll('.cart-item');
+                if (remainingItems.length === 0) {
+                    cartItemsContainer.innerHTML = `
+                        <div class="cart-item text-center p-4">
+                            <img src="{{ asset('images/vegetable-placeholder.jpg') }}" 
+                                 class="w-24 h-24 object-contain mx-auto mb-3">
+                            <p class="product-name text-gray-600 font-medium">Your cart is empty!</p>
+                            <p class="text-sm text-gray-500 mt-1">Explore our fresh vegetables to start shopping.</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function setupDeleteButtons() {
+            document.querySelectorAll(".delete-btn").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    if (!confirm("Are you sure you want to remove this item from your cart?")) return;
+
+                    const id = btn.dataset.id;
+                    fetch(`/cart/remove/${id}`, {
+                        method: "DELETE",
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            btn.closest("tr").remove();
+                            calculateTotals();
+                            removeFromCartPopup(id);
+                            showToast("Item removed from cart");
+                            checkIfCartIsEmpty();
+                        }
+                    });
+                });
+            });
+
+            document.querySelector(".delete-selected").addEventListener("click", () => {
+                const selectedItems = [...checkboxes].filter(cb => cb.checked).map(cb => cb.dataset.id);
+                if (selectedItems.length === 0) {
+                    alert("Please select items to delete");
+                    return;
+                }
+
+                if (!confirm(`Are you sure you want to remove ${selectedItems.length} item(s) from your cart?`)) return;
+
+                Promise.all(selectedItems.map(id => 
+                    fetch(`/cart/remove/${id}`, {
+                        method: "DELETE",
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                        }
+                    })
+                ))
+                .then(responses => Promise.all(responses.map(res => res.json())))
+                .then(results => {
+                    if (results.every(r => r.success)) {
+                        selectedItems.forEach(id => {
+                            document.querySelector(`.delete-btn[data-id="${id}"]`)?.closest("tr")?.remove();
+                            removeFromCartPopup(id);
+                        });
+                        calculateTotals();
+                        showToast(`${selectedItems.length} items removed from cart`);
+                        checkIfCartIsEmpty();
+                    }
+                });
+            });
+        }
+
+        function showToast(message) {
+            const toast = document.createElement("div");
+            toast.className = "fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg animate-fade-in";
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add("animate-fade-out");
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Checkout Modal Functionality
+        function setupCheckoutModal() {
+            const checkoutModal = document.getElementById("checkout-modal");
+            const openCheckoutModal = document.getElementById("open-checkout-modal");
+            const closeCheckoutModal = document.getElementById("close-checkout-modal");
+            const checkoutItems = document.getElementById("checkout-items");
+            const checkoutSubtotal = document.getElementById("checkout-subtotal");
+            const checkoutDiscount = document.getElementById("checkout-discount");
+            const checkoutShipping = document.getElementById("checkout-shipping");
+            const checkoutTotal = document.getElementById("checkout-total");
+            const confirmOrder = document.getElementById("confirm-order");
+            const cartForm = document.getElementById("cart-form");
+
+            function populateCheckoutModal() {
+                const selectedItems = [...checkboxes].filter(cb => cb.checked).map(cb => cb.dataset.id);
+                if (selectedItems.length === 0) {
+                    showToast("Please select at least one item to checkout.");
+                    return false;
+                }
+
+                checkoutItems.innerHTML = "";
+                let itemsData = [];
+
+                checkboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        const row = checkbox.closest("tr");
+                        const productId = checkbox.dataset.id;
+
+                        // Get product details
+                        const productNameElement = row.querySelector(".font-medium.text-gray-900");
+                        const productName = productNameElement ? productNameElement.textContent : "Unknown Product";
+
+                        const unitPriceElement = row.querySelector(".unit-price");
+                        const unitPrice = unitPriceElement ? parseFloat(unitPriceElement.textContent.replace(/[₱,]/g, "")) : 0;
+
+                        const quantityElement = row.querySelector(".quantity");
+                        const quantity = quantityElement ? parseInt(quantityElement.value) : 1;
+
+                        const packSizeElement = row.querySelector(".pack-size-input");
+                        const packSize = packSizeElement ? parseInt(packSizeElement.value) || 1 : 1;
+
+                        const discountElement = row.querySelector(".item-discount");
+                        const discountText = discountElement ? discountElement.textContent : "No Discount";
+                        const discountPercentage = discountText.includes("No Discount")
+                            ? 0
+                            : parseFloat(discountText.match(/\d+(\.\d+)?/)?.[0] || 0);
+
+                        const total = unitPrice * (1 - discountPercentage / 100) * quantity * packSize;
+
+                        // Get store name from the "Store: ..." div
+                        const storeElement = row.querySelectorAll(".text-sm.text-gray-500")[1]; // Second element is Store
+                        const storeName = storeElement ? storeElement.textContent.replace("Store: ", "") : "N/A";
+
+                        // Validate data
+                        if (!productId || !productName || isNaN(unitPrice) || isNaN(quantity) || isNaN(packSize)) {
+                            showToast("Invalid item data detected. Please refresh and try again.");
+                            return;
+                        }
+
+                        const itemHtml = `
+                            <div class="flex justify-between mb-2">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-800">${productName}</p>
+                                    <p class="text-xs text-gray-500">Store: ${storeName}</p>
+                                    <p class="text-xs text-gray-500">Pack Size: ${packSize}kg, Quantity: ${quantity}, Discount: ${discountPercentage}% OFF</p>
+                                </div>
+                                <p class="text-sm font-medium">₱${total.toFixed(2)}</p>
+                            </div>
+                        `;
+                        checkoutItems.insertAdjacentHTML("beforeend", itemHtml);
+
+                        itemsData.push({
+                            product_id: productId,
+                            quantity: quantity,
+                            pack_size: packSize,
+                            unit_price: unitPrice,
+                            discount: discountPercentage
+                        });
+                    }
+                });
+
+                if (itemsData.length === 0) {
+                    showToast("No valid items selected for checkout.");
+                    return false;
+                }
+
+                const totals = calculateTotals();
+                checkoutSubtotal.textContent = totals.subtotal.toFixed(2);
+                checkoutDiscount.textContent = totals.totalSavings.toFixed(2);
+                checkoutShipping.textContent = totals.shipping.toFixed(2);
+                checkoutTotal.textContent = totals.total.toFixed(2);
+
+                return itemsData;
+            }
+
+            openCheckoutModal.addEventListener("click", () => {
+                if (populateCheckoutModal()) {
+                    checkoutModal.classList.remove("hidden");
+                }
+            });
+
+            closeCheckoutModal.addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                checkoutModal.classList.add("hidden");
+            });
+
+            // Allow clicking outside modal to close
+            checkoutModal.addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.target === checkoutModal) {
+                    checkoutModal.classList.add("hidden");
+                }
+            });
+
+            // Prevent form submission on enter key or unintended submits
+            cartForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+            });
+
+            confirmOrder.addEventListener("click", () => {
+                const itemsData = populateCheckoutModal();
+                if (!itemsData) return;
+
+                const totals = calculateTotals();
+                const payload = {
+                    items: itemsData,
+                    subtotal: totals.subtotal,
+                    discount: totals.totalSavings,
+                    shipping: totals.shipping,
+                    total: totals.total,
+                    payment_method: "cod",
+                    address: "123 Green St, Veggie Town, Philippines"
+                };
+
+                confirmOrder.disabled = true; // Prevent multiple clicks
+                confirmOrder.textContent = "Processing...";
+
+                fetch("/checkout", {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! Status: ${res.status}`);
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        const selectedItems = [...checkboxes].filter(cb => cb.checked).map(cb => cb.dataset.id);
+                        selectedItems.forEach(id => {
+                            const row = document.querySelector(`.delete-btn[data-id="${id}"]`)?.closest("tr");
+                            if (row) row.remove();
+                            removeFromCartPopup(id);
+                        });
+                        checkoutModal.classList.add("hidden");
+                        calculateTotals();
+                        checkIfCartIsEmpty();
+                        showToast("Order placed successfully!");
+                    } else {
+                        showToast(data.message || "Failed to place order.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Checkout error:", error);
+                    showToast("An error occurred during checkout: " + error.message);
+                })
+                .finally(() => {
+                    confirmOrder.disabled = false;
+                    confirmOrder.textContent = "Confirm Order";
+                });
+            });
+        }
+
+        // Initialize
+        setupQuantityControls();
+        setupPackSizeControls();
+        setupDeleteButtons();
+        setupCheckoutModal();
+        calculateTotals();
+    });
+</script>
+
+<style>
+    .checkout-button {
+        width: 25%;
+        padding: 12px 24px;
+        background-color: #f97316; /* Orange-500 */
+        color: white;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .checkout-button:hover {
+        background-color: #ea580c; /* Darker Orange-600 */
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .checkout-button:active {
+        background-color: #c2410c; /* Even Darker - Orange-700 */
+    }
+
+    .checkout-button:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.5); /* focus ring */
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .animate-fade-out {
+        animation: fadeOut 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeOut {
+        from { opacity: 1; transform: translateY(0); }
+        to { opacity: 0; transform: translateY(10px); }
+    }
+
+    input.quantity {
+        -moz-appearance: textfield;
+    }
+
+    input.quantity::-webkit-outer-spin-button,
+    input.quantity::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .pack-size-btn {
+        padding: 2px 6px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background-color: white;
+        color: grey;
+        transition: all 0.2s ease;
+        margin-right: 2px;
+    }
+
+    .pack-size-btn:hover {
+        background-color: rgb(138, 255, 191);
+    }
+
+    .pack-size-btn.active {
+        background-color: #10b981;
+        color: white;
+        border-color: #10b981;
+    }
+
+    /* Modal Styles */
+    #checkout-modal {
+        z-index: 1100;
+    }
+
+    #checkout-modal .max-w-lg {
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    #checkout-modal .max-h-64 {
+        scrollbar-width: thin;
+        scrollbar-color: #ccc #f7f7f7;
+    }
+
+    #checkout-modal .max-h-64::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #checkout-modal .max-h-64::-webkit-scrollbar-track {
+        background: #f7f7f7;
+    }
+
+    #checkout-modal .max-h-64::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 3px;
+    }
+
+    @media (max-width: 640px) {
+        .checkout-button {
+            width: 100%;
+        }
+
+        #checkout-modal .max-w-lg {
+            width: 90%;
+        }
+    }
+</style>
+
+<!-- my real code  -->
